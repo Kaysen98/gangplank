@@ -1,7 +1,7 @@
 name: gangplank
 description: Gangplank is a package for Dart/Flutter compatible with windows and macOs to provide an interface to communicate with the LCU (League Client Update) API.
 version: 0.0.1
-homepage:
+repository: https://github.com/Kaysen98/gangplank
 
 environment:
   sdk: ">=2.17.6 <3.0.0"
@@ -22,3 +22,7 @@ flutter:
   assets:
       - assets/riotgames.pem
       - assets/example.jpg
+
+platforms:
+  windows:
+  macos:

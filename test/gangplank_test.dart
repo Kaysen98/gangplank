@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 void main() {
   test('MacOs', () {
@@ -14,8 +17,10 @@ void main() {
     final _regexMAC = RegExp(r'--install-directory=(.*?)( --|\n|$)');
     final match = _regexMAC.firstMatch(fromCmd);
     final matchedText = match?.group(1);
+
+    File lockfile = File(p.join(matchedText!, 'lockfile'));
     
-    print(matchedText);
+    print(lockfile.path);
   });
 
   test('Win', () {
@@ -24,7 +29,9 @@ void main() {
     final _regexWin = RegExp(r'--install-directory=(.*?)"');
     final match = _regexWin.firstMatch(fromCmd);
     final matchedText = match?.group(1);
+
+    File lockfile = File(p.join(matchedText!, 'lockfile'));
     
-    print(matchedText);
+    print(lockfile.path);
   });
 }

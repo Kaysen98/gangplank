@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:path/path.dart' as p;
 
 import 'package:gangplank/src/logging.dart';
 import 'package:gangplank/src/storage.dart';
@@ -138,7 +139,7 @@ class LCUWatcher {
     if (path != null) {
       // THE PROCESS IS RUNNING -> PATH COULD BE EXTRACTED FROM PROCESS
 
-      File lockfile = File('$path\\lockfile');
+      File lockfile = File(p.join(path, 'lockfile'));
 
       if (await lockfile.exists()) {
         String fileContent = await lockfile.readAsString();
