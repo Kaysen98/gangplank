@@ -43,7 +43,7 @@ class LCUWatcher {
   static const _commandWin = "WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline";
   final _regexWin = RegExp(r'--install-directory=(.*?)"');
 
-  final _regexMAC = RegExp(r'/--install-directory=(.*?)( --|\n|$)/');
+  final _regexMAC = RegExp(r'/--install-directory=(.*?)( --|\n|$)');
 
   bool _clientIsRunning = false;
 
