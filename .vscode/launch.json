@@ -1,0 +1,45 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "gangplank",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "gangplank (profile mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "gangplank (release mode)",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        },
+        {
+            "name": "gangplank_example",
+            "cwd": "example\\gangplank_example",
+            "request": "launch",
+            "type": "dart"
+        },
+        {
+            "name": "gangplank_example (profile mode)",
+            "cwd": "example\\gangplank_example",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "profile"
+        },
+        {
+            "name": "gangplank_example (release mode)",
+            "cwd": "example\\gangplank_example",
+            "request": "launch",
+            "type": "dart",
+            "flutterMode": "release"
+        }
+    ]
+}
