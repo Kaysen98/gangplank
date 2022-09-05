@@ -122,7 +122,7 @@ class LCUWatcher {
           _storage.credentials = null;
           _lockfileWatcher!.cancel();
 
-          _logger.log('DISCONNECTED! LOCKFILE DELETED');
+          _logger.log('CLIENT CLOSED! LOCKFILE DELETED');
 
           _checkForProcess();
         }
@@ -156,7 +156,7 @@ class LCUWatcher {
         _clientIsRunning = true;
         _onClientStartedStreamController.add(_storage.credentials!);
 
-        _logger.log('CONNECTED! PROCESS FOUND');
+        _logger.log('CLIENT STARTED! PROCESS FOUND');
         _logger.log(_storage.credentials.toString());
 
         _initFileWatcher();
