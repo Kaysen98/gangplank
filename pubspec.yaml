@@ -1,5 +1,5 @@
 name: gangplank
-description: Gangplank is a package designed to ease the use of the LCU (League client update) API. Provides a League client watcher, socket connector and HTTP client.
+description: Gangplank is a package for Dart/Flutter compatible with windows and macOs to provide an interface to communicate with the LCU (League Client Update) API.
 version: 0.0.1
 homepage:
 
