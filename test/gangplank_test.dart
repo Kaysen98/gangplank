@@ -5,7 +5,8 @@ import 'package:path/path.dart' as p;
 
 void main() {
   test('MacOs', () async {
-    final fromCmd = """USER               PID  %CPU %MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND          ARGS
+    final fromCmd =
+        """USER               PID  %CPU %MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND          ARGS
 mohamedali       32657 108.2  2.0 408792240 170032   ??  R    10:17PM   0:00.73 /Users/mohamedal /Users/mohamedali/FlutterDev/flutter/bin/cache/dart-sdk/bin/dart /Users/mohamedali/Projects/Test/tests/lib/tests.dart
 _coreaudiod        179  14.4  0.3 409090656  21296   ??  Ss   11:20PM  66:10.77 /usr/sbin/coreau /usr/sbin/coreaudiod
 _windowserver      157  10.4  0.6 410068096  52432   ??  Ss   11:20PM 110:28.18 /System/Library/ /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer -daemon
@@ -404,14 +405,15 @@ _cmiodalassistants 31658   0.0  0.1 408230608   4272   ??  S    10:04PM   0:00.1
   });
 
   test('Win', () {
-    final fromCmd = '"D:/Riot Games/League of Legends/LeagueClientUx.exe" "--riotclient-auth-token=pRZ4SZNdgcKwCXNz7pgiDQ" "--riotclient-app-port=61661" "--no-rads" "--disable-self-update" "--region=EUW" "--locale=en_GB" "--remoting-auth-token=W1067dFjBVjuvSIKzqOOVg" "--respawn-command=LeagueClient.exe" "--respawn-display-name=League of Legends" "--app-port=61738" "--install-directory=D:\Riot Games\League of Legends" "--app-name=LeagueClient" "--ux-name=LeagueClientUx" "--ux-helper-name=LeagueClientUxHelper" "--log-dir=LeagueClient Logs" "--crash-reporting=crashpad" "--crash-environment=EUW1" "--crash-pipe=\\.\pipe\crashpad_14540_SUDIBTKSVSVVTZZA" "--app-log-file-path=D:/Riot Games/League of Legends/Logs/LeagueClient Logs/2022-09-05T15-42-34_14540_LeagueClient.log" "--app-pid=14540" "--output-base-dir=D:\Riot Games\League of Legends" "--no-proxy-server"';
+    final fromCmd =
+        '"D:/Riot Games/League of Legends/LeagueClientUx.exe" "--riotclient-auth-token=pRZ4SZNdgcKwCXNz7pgiDQ" "--riotclient-app-port=61661" "--no-rads" "--disable-self-update" "--region=EUW" "--locale=en_GB" "--remoting-auth-token=W1067dFjBVjuvSIKzqOOVg" "--respawn-command=LeagueClient.exe" "--respawn-display-name=League of Legends" "--app-port=61738" "--install-directory=D:\Riot Games\League of Legends" "--app-name=LeagueClient" "--ux-name=LeagueClientUx" "--ux-helper-name=LeagueClientUxHelper" "--log-dir=LeagueClient Logs" "--crash-reporting=crashpad" "--crash-environment=EUW1" "--crash-pipe=\\.\pipe\crashpad_14540_SUDIBTKSVSVVTZZA" "--app-log-file-path=D:/Riot Games/League of Legends/Logs/LeagueClient Logs/2022-09-05T15-42-34_14540_LeagueClient.log" "--app-pid=14540" "--output-base-dir=D:\Riot Games\League of Legends" "--no-proxy-server"';
 
     final _regexWin = RegExp(r'--install-directory=(.*?)"');
     final match = _regexWin.firstMatch(fromCmd);
     final matchedText = match?.group(1);
 
     File lockfile = File(p.join(matchedText!, 'lockfile'));
-    
+
     print(lockfile.path);
   });
 }

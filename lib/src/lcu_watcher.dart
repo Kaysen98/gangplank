@@ -22,13 +22,13 @@ class LCUCredentials {
   });
 
   Map<String, dynamic> toJson() => {
-    'host': host,
-    'port': port,
-    'username': username,
-    'password': password,
-    'lockfilePath': lockfile.path,
-    'leagueDir': leagueDir.path,
-  };
+        'host': host,
+        'port': port,
+        'username': username,
+        'password': password,
+        'lockfilePath': lockfile.path,
+        'leagueDir': leagueDir.path,
+      };
 
   @override
   String toString() {
@@ -40,17 +40,21 @@ class LCUWatcher {
   late final GangplankLogger _logger;
   late final LCUStorage _storage;
 
-  static const _commandWin = "WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline";
+  static const _commandWin =
+      "WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline";
   final _regexWin = RegExp(r'--install-directory=(.*?)"');
 
   final _regexMAC = RegExp(r'--install-directory=(.*?)( --|\n|$)');
 
   bool _clientIsRunning = false;
 
-  final StreamController<LCUCredentials> _onClientStartedStreamController = StreamController.broadcast();
-  final StreamController<void> _onClientClosedStreamController = StreamController.broadcast();
+  final StreamController<LCUCredentials> _onClientStartedStreamController =
+      StreamController.broadcast();
+  final StreamController<void> _onClientClosedStreamController =
+      StreamController.broadcast();
 
-  Stream<LCUCredentials> get onClientStarted => _onClientStartedStreamController.stream;
+  Stream<LCUCredentials> get onClientStarted =>
+      _onClientStartedStreamController.stream;
   Stream<void> get onClientClosed => _onClientClosedStreamController.stream;
   bool get clientIsRunning => _clientIsRunning;
 
@@ -67,9 +71,9 @@ class LCUWatcher {
   }
 
   /// The LCUWatcher will watch for the League client presence.
-  /// 
+  ///
   /// If the LCUWatcher finds the running League client the [onClientStarted] event will be fired.
-  /// 
+  ///
   /// If League client is closed the [onClientClosed] event will be fired.
   void watch() {
     _checkForProcess();
@@ -78,7 +82,7 @@ class LCUWatcher {
   }
 
   /// Stop watching the League client.
-  /// 
+  ///
   /// This will also clean up the currently saved [LCUCredentials].
   /// That results in the LCUSocket and LCUHttpClient to stop working until the [onClientStarted] event is fired again.
   void stopWatching() {
@@ -110,9 +114,11 @@ class LCUWatcher {
     // WHEN THE FILE IS DELETED THE WATCHER IS DISPOSED AUTOMATICALLY
     // WE ONLY NEED IT TO CANCEL THE SUBSCRIPTION IN CASE THE USER STOPS THE WATCHER
 
-    _lockfileWatcher = _storage.credentials!.leagueDir.watch(
+    _lockfileWatcher = _storage.credentials!.leagueDir
+        .watch(
       events: FileSystemEvent.delete,
-    ).listen((event) {
+    )
+        .listen((event) {
       if (event.path == _storage.credentials?.lockfile.path) {
         // LOCKFILE WAS TOUCHED
 
@@ -141,7 +147,7 @@ class LCUWatcher {
       File lockfile = File(p.join(path, 'lockfile'));
 
       if (await lockfile.exists()) {
-        String fileContent = await lockfile.readAsString(); 
+        String fileContent = await lockfile.readAsString();
         List<String> splitData = fileContent.split(':');
 
         _storage.credentials = LCUCredentials(
@@ -152,7 +158,7 @@ class LCUWatcher {
         );
 
         _timerProcessWatcher?.cancel();
-        
+
         _clientIsRunning = true;
         _onClientStartedStreamController.add(_storage.credentials!);
 
@@ -178,9 +184,7 @@ class LCUWatcher {
       return matchedText;
     } else if (Platform.isMacOS) {
       final result = await Process.run(
-        'ps',
-        ["aux", "-o", "args | grep 'LeagueClientUx'"]
-      );
+          'ps', ["aux", "-o", "args | grep 'LeagueClientUx'"]);
 
       final match = _regexMAC.firstMatch(result.stdout);
       final matchedText = match?.group(1);

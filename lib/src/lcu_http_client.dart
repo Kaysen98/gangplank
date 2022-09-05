@@ -14,7 +14,8 @@ class LCUHttpClientException implements Exception {
   int httpStatus;
   String? errorCode;
 
-  LCUHttpClientException({required this.message, required this.httpStatus, this.errorCode});
+  LCUHttpClientException(
+      {required this.message, required this.httpStatus, this.errorCode});
 
   @override
   String toString() {
@@ -37,14 +38,14 @@ class LCUHttpClient {
   }
 
   /// Fires a GET request against the League client.
-  /// 
+  ///
   /// Accepts [params].
-  /// 
+  ///
   /// Throws [LCUHttpClientException] on error containing the message, http status and error code.
   /// You can call `toString()` on the exception to print the whole exception.
-  /// 
+  ///
   /// Returns the requested resources payload.
-  Future get(String endpoint, { Map<String, dynamic>? params }) async {
+  Future get(String endpoint, {Map<String, dynamic>? params}) async {
     return await _request(
       endpoint,
       HttpMethod.get,
@@ -53,41 +54,42 @@ class LCUHttpClient {
   }
 
   /// Fires a DELETE request against the League client.
-  /// 
+  ///
   /// Accepts [params].
-  /// 
+  ///
   /// You cannot perform HTTP requests before the LCUCredentials were set.
   /// That means you have to wait for the onClientStarted event from the LCUWatcher.
   /// Otherwise throws an assert error.
-  /// 
+  ///
   /// Throws [LCUHttpClientException] on error containing the message, http status and error code.
   /// You can call `toString()` on the exception to print the whole exception.
-  /// 
+  ///
   /// Returns the requested resources payload.
-  Future delete(String endpoint, { Map<String, dynamic>? params }) async {
+  Future delete(String endpoint, {Map<String, dynamic>? params}) async {
     return await _request(
-      endpoint, 
-      HttpMethod.delete, 
+      endpoint,
+      HttpMethod.delete,
       params: params,
     );
   }
 
   /// Fires a POST request against the League client.
-  /// 
+  ///
   /// Accepts a [body] and [params].
-  /// 
+  ///
   /// You cannot perform HTTP requests before the LCUCredentials were set.
   /// That means you have to wait for the onClientStarted event from the LCUWatcher.
   /// Otherwise throws an assert error.
-  /// 
+  ///
   /// Throws [LCUHttpClientException] on error containing the message, http status and error code.
   /// You can call `toString()` on the exception to print the whole exception.
-  /// 
+  ///
   /// Returns the requested resources payload.
-  Future post(String endpoint, { dynamic body, Map<String, dynamic>? params }) async {
+  Future post(String endpoint,
+      {dynamic body, Map<String, dynamic>? params}) async {
     return await _request(
-      endpoint, 
-      HttpMethod.post, 
+      endpoint,
+      HttpMethod.post,
       body: body,
       params: params,
     );
@@ -103,53 +105,58 @@ class LCUHttpClient {
   ///
   /// Throws [LCUHttpClientException] on error containing the message, http status and error code.
   /// You can call `toString()` on the exception to print the whole exception.
-  /// 
+  ///
   /// Returns the requested resources payload.
-  Future patch(String endpoint, { dynamic body, Map<String, dynamic>? params }) async {
+  Future patch(String endpoint,
+      {dynamic body, Map<String, dynamic>? params}) async {
     return await _request(
-      endpoint, 
-      HttpMethod.patch, 
+      endpoint,
+      HttpMethod.patch,
       body: body,
       params: params,
     );
   }
 
   /// Fires a PUT request against the League client.
-  /// 
+  ///
   /// Accepts a [body] and [params].
-  /// 
+  ///
   /// You cannot perform HTTP requests before the LCUCredentials were set.
   /// That means you have to wait for the onClientStarted event from the LCUWatcher.
   /// Otherwise throws an assert error.
-  /// 
+  ///
   /// Throws [LCUHttpClientException] on error containing the message, http status and error code.
   /// You can call `toString()` on the exception to print the whole exception.
-  /// 
+  ///
   /// Returns the requested resources payload.
-  Future put(String endpoint, { dynamic body, Map<String, dynamic>? params }) async {
+  Future put(String endpoint,
+      {dynamic body, Map<String, dynamic>? params}) async {
     return await _request(
-      endpoint, 
-      HttpMethod.put, 
+      endpoint,
+      HttpMethod.put,
       body: body,
       params: params,
     );
   }
 
-  Future _request(String endpoint, HttpMethod method, {dynamic body, Map<String, dynamic>? params}) async {
-    assert(_storage.credentials != null, 'LCU-CREDENTIALS NOT FOUND IN STORAGE. YOU MUST WAIT FOR THE LCU-WATCHER TO CONNECT BEFORE DOING HTTP REQUESTS.');
-    
+  Future _request(String endpoint, HttpMethod method,
+      {dynamic body, Map<String, dynamic>? params}) async {
+    assert(_storage.credentials != null,
+        'LCU-CREDENTIALS NOT FOUND IN STORAGE. YOU MUST WAIT FOR THE LCU-WATCHER TO CONNECT BEFORE DOING HTTP REQUESTS.');
+
     String? url;
 
     try {
       LCUCredentials credentials = _storage.credentials!;
 
       url = 'https://${credentials.host}:${credentials.port}$endpoint';
-      var bytes = utf8.encode('${credentials.username}:${credentials.password}');
+      var bytes =
+          utf8.encode('${credentials.username}:${credentials.password}');
       var base64Str = base64.encode(bytes);
 
       Map<String, String> headers = {
         'Accept': 'application/json',
-        'Authorization':'Basic $base64Str',
+        'Authorization': 'Basic $base64Str',
         'Content-Type': 'application/json'
       };
 
@@ -171,23 +178,36 @@ class LCUHttpClient {
           response = await http.delete(uri, headers: headers).timeout(timeout);
           break;
         case HttpMethod.post:
-          response = await http.post(uri, headers: headers, body: body != null ? jsonEncode(body) : null).timeout(timeout);
+          response = await http
+              .post(uri,
+                  headers: headers,
+                  body: body != null ? jsonEncode(body) : null)
+              .timeout(timeout);
           break;
         case HttpMethod.patch:
-          response = await http.patch(uri, headers: headers, body: body != null ? jsonEncode(body) : null).timeout(timeout);
+          response = await http
+              .patch(uri,
+                  headers: headers,
+                  body: body != null ? jsonEncode(body) : null)
+              .timeout(timeout);
           break;
         case HttpMethod.put:
-          response = await http.put(uri, headers: headers, body: body != null ? jsonEncode(body) : null).timeout(timeout);
+          response = await http
+              .put(uri,
+                  headers: headers,
+                  body: body != null ? jsonEncode(body) : null)
+              .timeout(timeout);
           break;
       }
 
       final responseBodyRaw = utf8.decode(response.bodyBytes);
-      final responseBody = jsonDecode(responseBodyRaw.isEmpty ? '{}' : responseBodyRaw);
+      final responseBody =
+          jsonDecode(responseBodyRaw.isEmpty ? '{}' : responseBodyRaw);
 
-      if (responseBody is Map && 
-      (responseBody['errorCode'] != null
-      || responseBody['httpStatus'] != null
-      || responseBody['message'] != null)) {
+      if (responseBody is Map &&
+          (responseBody['errorCode'] != null ||
+              responseBody['httpStatus'] != null ||
+              responseBody['message'] != null)) {
         throw LCUHttpClientException(
           message: responseBody['message'],
           httpStatus: responseBody['httpStatus'],
@@ -211,7 +231,7 @@ class LCUHttpClient {
       if (err is LCUHttpClientException) rethrow;
 
       throw LCUHttpClientException(
-        message: err.toString(), 
+        message: err.toString(),
         httpStatus: 400,
       );
     }

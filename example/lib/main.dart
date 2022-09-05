@@ -54,7 +54,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
 
       gp.socket.connect();
 
-      setState((){});
+      setState(() {});
     });
 
     gp.watcher.onClientClosed.listen((_) {
@@ -62,20 +62,20 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
       /* IF THE LCU-SOCKET CONNECTED IT WILL DISCONNECT AUTOMATICALLY
       SINCE THE LEAGUE CLIENT WAS CLOSED*/
 
-      setState((){});
+      setState(() {});
     });
 
     gp.socket.onConnect.listen((_) {
       // SOCKET CONNECTED
-      
-      setState((){});
+
+      setState(() {});
     });
 
     gp.socket.onDisconnect.listen((_) {
       // SOCKET DISCONNECTED
 
       events.clear();
-      setState((){});
+      setState(() {});
     });
 
     // START WATCHING THE LCU
@@ -122,50 +122,51 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Card(
-              margin: EdgeInsets.zero,
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('LCU-CREDENTIALS'),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      _credentials.toString(),
-                    ),
-                  ],
-                )
-              )
-            ),
+                margin: EdgeInsets.zero,
+                child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('LCU-CREDENTIALS'),
+                        const SizedBox(
+                          height: 10,
+                        ),
+                        Text(
+                          _credentials.toString(),
+                        ),
+                      ],
+                    ))),
             const SizedBox(
               height: 10,
             ),
             Card(
               margin: EdgeInsets.zero,
               child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('LCU-STATUSES'),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    ListTile(
-                      leading: _buildStatusDot(gp.watcher.clientIsRunning),
-                      title: Text(gp.watcher.clientIsRunning ? 'LCU is running' : 'LCU is not running'),
-                      dense: true,
-                    ),
-                    ListTile(
-                      leading: _buildStatusDot(gp.socket.isConnected),
-                      title: Text(gp.socket.isConnected ? 'LCU-Socket is connected' : 'LCU-Socket is not connected'),
-                      dense: true,
-                    ),
-                  ],
-                )
-              ),
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('LCU-STATUSES'),
+                      const SizedBox(
+                        height: 10,
+                      ),
+                      ListTile(
+                        leading: _buildStatusDot(gp.watcher.clientIsRunning),
+                        title: Text(gp.watcher.clientIsRunning
+                            ? 'LCU is running'
+                            : 'LCU is not running'),
+                        dense: true,
+                      ),
+                      ListTile(
+                        leading: _buildStatusDot(gp.socket.isConnected),
+                        title: Text(gp.socket.isConnected
+                            ? 'LCU-Socket is connected'
+                            : 'LCU-Socket is not connected'),
+                        dense: true,
+                      ),
+                    ],
+                  )),
             ),
             const SizedBox(
               height: 10,
@@ -176,41 +177,50 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
               alignment: WrapAlignment.center,
               children: [
                 ElevatedButton(
-                  onPressed: gp.watcher.clientIsRunning && gp.socket.isConnected ? () async {
-                    try {
-                      await gp.httpClient.post('/lol-lobby/v2/lobby', body: { 'queueId': 440 });
-                    } catch (err) {
-                      print(err.toString());
-                    }
-                  } : null,
-                  child: const Text(
-                    'CREATE FLEX LOBBY',
-                  )
-                ),
+                    onPressed: gp.watcher.clientIsRunning &&
+                            gp.socket.isConnected
+                        ? () async {
+                            try {
+                              await gp.httpClient.post('/lol-lobby/v2/lobby',
+                                  body: {'queueId': 440});
+                            } catch (err) {
+                              print(err.toString());
+                            }
+                          }
+                        : null,
+                    child: const Text(
+                      'CREATE FLEX LOBBY',
+                    )),
                 ElevatedButton(
-                  onPressed: gp.watcher.clientIsRunning && gp.socket.isConnected ? () async {
-                    try {
-                      await gp.httpClient.post('/lol-lobby/v2/lobby', body: { 'queueId': 420 });
-                    } catch (err) {
-                      print(err.toString());
-                    }
-                  } : null,
-                  child: const Text(
-                    'CREATE SOLO/DUO LOBBY',
-                  )
-                ),
+                    onPressed: gp.watcher.clientIsRunning &&
+                            gp.socket.isConnected
+                        ? () async {
+                            try {
+                              await gp.httpClient.post('/lol-lobby/v2/lobby',
+                                  body: {'queueId': 420});
+                            } catch (err) {
+                              print(err.toString());
+                            }
+                          }
+                        : null,
+                    child: const Text(
+                      'CREATE SOLO/DUO LOBBY',
+                    )),
                 ElevatedButton(
-                  onPressed: gp.watcher.clientIsRunning && gp.socket.isConnected && currentGameflowPhase == 'Lobby' ? () async {
-                    try {
-                      await gp.httpClient.delete('/lol-lobby/v2/lobby');
-                    } catch (err) {
-                      print(err.toString());
-                    }
-                  } : null,
-                  child: const Text(
-                    'LEAVE LOBBY',
-                  )
-                ),
+                    onPressed: gp.watcher.clientIsRunning &&
+                            gp.socket.isConnected &&
+                            currentGameflowPhase == 'Lobby'
+                        ? () async {
+                            try {
+                              await gp.httpClient.delete('/lol-lobby/v2/lobby');
+                            } catch (err) {
+                              print(err.toString());
+                            }
+                          }
+                        : null,
+                    child: const Text(
+                      'LEAVE LOBBY',
+                    )),
               ],
             ),
             const SizedBox(

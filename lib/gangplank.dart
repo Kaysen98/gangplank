@@ -24,11 +24,11 @@ class Gangplank {
   late LCUHttpClient httpClient;
 
   /// Init Gangplank, you can disable logging by providing [disableLogging].
-  Gangplank({ bool disableLogging = false }) {
+  Gangplank({bool disableLogging = false}) {
     _storage = LCUStorage();
 
     _storage.disableLogging = disableLogging;
-    
+
     watcher = LCUWatcher(storage: _storage);
     socket = LCUSocket(storage: _storage);
     httpClient = LCUHttpClient(storage: _storage);
