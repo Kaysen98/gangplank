@@ -142,7 +142,7 @@ class LCUWatcher {
       File lockfile = File(p.join(path, 'lockfile'));
 
       if (await lockfile.exists()) {
-        String fileContent = await lockfile.readAsString();
+        String fileContent = await lockfile.readAsString(); 
         List<String> splitData = fileContent.split(':');
 
         _storage.credentials = LCUCredentials(
