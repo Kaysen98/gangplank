@@ -43,7 +43,6 @@ class LCUWatcher {
   static const _commandWin = "WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline";
   final _regexWin = RegExp(r'--install-directory=(.*?)"');
 
-  static const _commandMAC = "ps x -o args | grep 'LeagueClientUx'";
   final _regexMAC = RegExp(r'/--install-directory=(.*?)( --|\n|$)/');
 
   bool _clientIsRunning = false;
@@ -179,9 +178,8 @@ class LCUWatcher {
       return matchedText;
     } else if (Platform.isMacOS) {
       final result = await Process.run(
-        _commandMAC,
-        [],
-        runInShell: true,
+        'ps',
+        ["aux", "-o", "args | grep 'LeagueClientUx'"]
       );
 
       final match = _regexMAC.firstMatch(result.stdout);

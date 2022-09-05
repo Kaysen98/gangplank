@@ -26,6 +26,18 @@ This package ONLY supports windows and MacOs at the moment.
 3. LCUHttpClient provides the most common HTTP methods to send HTTP requests to the League client (e.g. create a lobby, start matchmaking etc.).
 
 # Usage
+## HttpOverrides
+
+Before you start using this package, make sure you override HTTP globally to prevent handshake exceptions when connecting to the LCU.
+
+```dart
+void main() {
+  HttpOverrides.global = GangplankHttpOverrides();
+
+  runApp(const GangplankExampleApp());
+}
+```
+
 ## LCUWatcher and LCUSocket
 
 The LCUWatcher is the first instance you need to use for the other services to work correctly. It watches your League client and extracts the needed credentials to connect to the League client. You CANNOT use the LCUSocket or LCUHttpClient before the onClientStarted event fired. After the LCUWatcher fired the onClientStarted event you can connect to the socket. When the socket is successfully connected the onConnect event will be fired. If the League client is closed and opened again all services will work again naturally, no need to handle anything yourself :)
