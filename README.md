@@ -15,9 +15,9 @@ and the Flutter guide for
 
 Gangplank is a package designed to ease the use of the LCU (League client update) API. 
 It provides multiple functionalities that are described below.
-This package ONLY supports windows and MacOs at the moment.
+This package ONLY supports windows and macOS at the moment.
 
-![](assets/example.jpg)
+<img src="https://github.com/Kaysen98/gangplank/raw/main/assets/example.jpg">
 
 # Features
 
