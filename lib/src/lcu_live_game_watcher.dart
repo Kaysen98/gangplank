@@ -176,8 +176,6 @@ class LCULiveGameWatcher {
     if (summary != null) {
       _gameSummaryUpdateStreamController.add(summary);
 
-      print([!gameHasStarted, summary.eventData.firstWhereOrNull((e) => e['EventName'] == 'GameStart') != null]);
-      
       if (!gameHasStarted && summary.eventData.firstWhereOrNull((e) => e['EventName'] == 'GameStart') != null) {
         gameHasStarted = true;
 

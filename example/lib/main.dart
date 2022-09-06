@@ -195,6 +195,11 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                         height: 10,
                       ),
                       ListTile(
+                        leading: _buildStatusDot(true),
+                        title: Text(currentGameflowPhase != null ? 'Gameflowphase: $currentGameflowPhase' : 'Gameflowphase: No gameflow found yet.'),
+                        dense: true,
+                      ),
+                      ListTile(
                         leading: _buildStatusDot(watcher.clientIsRunning),
                         title: Text(watcher.clientIsRunning
                             ? 'LCU is running'
