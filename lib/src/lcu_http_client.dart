@@ -7,6 +7,18 @@ import 'package:gangplank/src/lcu_watcher.dart';
 import 'package:gangplank/src/logging.dart';
 import 'package:gangplank/src/storage.dart';
 
+class LCUHttpClientConfig {
+  /// Disables the logging for the [LCUHttpClient].
+  /// [disableLogging] defaults to false.
+  final bool disableLogging;
+
+  /// The timeout used on HTTP requests.
+  /// [tryConnectInterval] defaults to 8 seconds.
+  final Duration requestTimeout;
+
+  LCUHttpClientConfig({ this.disableLogging = false, this.requestTimeout = const Duration(seconds: 8) });
+}
+
 enum HttpMethod { get, post, delete, patch, put }
 
 class LCUHttpClientException implements Exception {
@@ -26,10 +38,15 @@ class LCUHttpClientException implements Exception {
 class LCUHttpClient {
   late final GangplankLogger _logger;
   late final LCUStorage _storage;
-  late final Duration timeout = const Duration(seconds: 8);
+  
+  // CONFIG
 
-  LCUHttpClient({required LCUStorage storage}) {
+  late final LCUHttpClientConfig _config;
+
+  LCUHttpClient({required LCUStorage storage, LCUHttpClientConfig? config}) {
     _storage = storage;
+
+    _config = config ?? LCUHttpClientConfig();
 
     _logger = GangplankLogger(
       service: 'LCU-HTTP-CLIENT',
@@ -172,31 +189,31 @@ class LCUHttpClient {
 
       switch (method) {
         case HttpMethod.get:
-          response = await http.get(uri, headers: headers).timeout(timeout);
+          response = await http.get(uri, headers: headers).timeout(_config.requestTimeout);
           break;
         case HttpMethod.delete:
-          response = await http.delete(uri, headers: headers).timeout(timeout);
+          response = await http.delete(uri, headers: headers).timeout(_config.requestTimeout);
           break;
         case HttpMethod.post:
           response = await http
               .post(uri,
                   headers: headers,
                   body: body != null ? jsonEncode(body) : null)
-              .timeout(timeout);
+              .timeout(_config.requestTimeout);
           break;
         case HttpMethod.patch:
           response = await http
               .patch(uri,
                   headers: headers,
                   body: body != null ? jsonEncode(body) : null)
-              .timeout(timeout);
+              .timeout(_config.requestTimeout);
           break;
         case HttpMethod.put:
           response = await http
               .put(uri,
                   headers: headers,
                   body: body != null ? jsonEncode(body) : null)
-              .timeout(timeout);
+              .timeout(_config.requestTimeout);
           break;
       }
 
@@ -215,16 +232,16 @@ class LCUHttpClient {
         );
       }
 
-      _logger.log('SUCCESSFULLY RECEIVED RESPONSE FROM $url');
+      if (!_config.disableLogging) _logger.log('SUCCESSFULLY RECEIVED RESPONSE FROM $url');
 
       return responseBody;
     } catch (err) {
-      _logger.log('ERROR OCCURED REQUESTING $url');
+      if (!_config.disableLogging) _logger.log('ERROR OCCURED REQUESTING $url');
 
       if (err is TimeoutException) {
         throw LCUHttpClientException(
           httpStatus: 408,
-          message: 'The request timed out after ${timeout.inSeconds} seconds',
+          message: 'The request timed out after ${_config.requestTimeout.inSeconds} seconds',
         );
       }
 

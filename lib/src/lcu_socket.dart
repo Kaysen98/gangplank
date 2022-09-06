@@ -6,6 +6,20 @@ import 'package:gangplank/src/lcu_watcher.dart';
 import 'package:gangplank/src/logging.dart';
 import 'package:gangplank/src/storage.dart';
 
+class LCUSocketConfig {
+  /// Disables the logging for the [LCUSocket].
+  /// 
+  /// [disableLogging] defaults to `false`.
+  final bool disableLogging;
+
+  /// The interval used to try to connect the LCUSocket on failure.
+  /// 
+  /// [tryConnectInterval] defaults to 5 seconds.
+  final Duration tryConnectInterval;
+
+  LCUSocketConfig({ this.disableLogging = false, this.tryConnectInterval = const Duration(seconds: 5)});
+}
+
 class EventResponse {
   final String uri;
   final dynamic data;
@@ -54,6 +68,10 @@ class LCUSocket {
   late final GangplankLogger _logger;
   late final LCUStorage _storage;
 
+  // CONFIG
+
+  late final LCUSocketConfig _config;
+
   final StreamController _onConnectStreamController =
       StreamController.broadcast();
   final StreamController _onDisconnectStreamController =
@@ -62,15 +80,19 @@ class LCUSocket {
   Stream get onConnect => _onConnectStreamController.stream;
   Stream get onDisconnect => _onDisconnectStreamController.stream;
   bool get isConnected => _connected;
+  WebSocket? get nativeSocket => _socket;
+  Map<String, List<Function(EventResponse)>> get subscriptions => _subscriptions;
 
   bool _connected = false;
   Timer? _tryConnectInterval;
 
-  final Map<String, List<Function>> _subscriptions = {};
+  final Map<String, List<Function(EventResponse)>> _subscriptions = {};
   WebSocket? _socket;
 
-  LCUSocket({required LCUStorage storage}) {
+  LCUSocket({required LCUStorage storage, LCUSocketConfig? config}) {
     _storage = storage;
+
+    _config = config ?? LCUSocketConfig();
 
     _logger = GangplankLogger(
       service: 'LCUSocket',
@@ -107,7 +129,7 @@ class LCUSocket {
 
     if (!isConnected) {
       _tryConnectInterval =
-          Timer.periodic(const Duration(seconds: 5), (_) async {
+          Timer.periodic(_config.tryConnectInterval, (_) async {
         await _connect();
 
         if (isConnected) _tryConnectInterval!.cancel();
@@ -124,7 +146,7 @@ class LCUSocket {
             'LCU-CREDENTIALS NOT PROVIDED. YOU MUST WAIT FOR THE LCU-WATCHER TO CONNECT BEFORE YOU TRY TO CONNECT TO THE LCUSocket.');
       }
 
-      _logger.log('TRYING TO CONNECT');
+      if (!_config.disableLogging) _logger.log('TRYING TO CONNECT');
 
       String url =
           'wss://${credentials.username}:${credentials.password}@${credentials.host}:${credentials.port}/';
@@ -143,7 +165,7 @@ class LCUSocket {
       _connected = true;
       _onConnectStreamController.add(null);
 
-      _logger.log('CONNECTED!');
+      if (!_config.disableLogging) _logger.log('CONNECTED!');
 
       _socket!.listen((content) {
         if (content is String && content.isEmpty) {
@@ -208,7 +230,7 @@ class LCUSocket {
         }
       }, onDone: () async {
         if (_connected) {
-          _logger.log('DISCONNECTED!');
+          if (!_config.disableLogging) _logger.log('DISCONNECTED!');
           _connected = false;
           _onDisconnectStreamController.add(null);
         }
@@ -217,11 +239,11 @@ class LCUSocket {
       _socket!.add(jsonEncode([5, 'OnJsonApiEvent']));
     } catch (err) {
       if (_connected) {
-        _logger.log('DISCONNECTED!');
+        if (!_config.disableLogging) _logger.log('DISCONNECTED!');
         _connected = false;
         _onDisconnectStreamController.add(null);
       } else {
-        _logger.log(err.toString());
+        if (!_config.disableLogging) _logger.log(err.toString());
       }
     }
   }
@@ -272,11 +294,31 @@ class LCUSocket {
     }
   }
 
-  /// Unsubscribes an eventlistener by path.
+  /// Unsubscribes all eventlisteners by path.
   void unsubscribe(String path) {
     // REMOVE FROM SUBSCRIPTION MAP
 
     _subscriptions.remove(path);
+  }
+
+  /// Unsubscribes specific eventlistener by function.
+  /// To make this work you need to have a named function in the subscribe call instead of an anonymous function.
+  void unsubscribeSpecific(Function(EventResponse) function) {
+    // REMOVE FROM SUBSCRIPTION MAP
+
+    for(String key in _subscriptions.keys) {
+      if (_subscriptions[key]!.contains(function)) {
+        _subscriptions[key]!.removeWhere((e) => e == function);
+      }
+    }
+  }
+
+  /// Fire an event manually providing [path] and [eventResponse].
+  /// If you subscribed to `/test` e.g. and you call [fireEvent] with the path `/test` it will raise an event in your subscription handler.
+  void fireEvent(String path, EventResponse eventResponse) {
+    if (_subscriptions.containsKey(path)) {
+      _subscriptions[path]!.forEach((callback) => callback(eventResponse));
+    }
   }
 
   /// Call dispose to clean all subscriptions when you are finished using the LCUSocket.

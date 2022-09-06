@@ -6,6 +6,20 @@ import 'package:path/path.dart' as p;
 import 'package:gangplank/src/logging.dart';
 import 'package:gangplank/src/storage.dart';
 
+class LCUWatcherConfig {
+  /// Disables the logging for the [LCUWatcher].
+  /// 
+  /// [disableLogging] defaults to `false`.
+  final bool disableLogging;
+
+  /// The interval used to check wether the League of Legends process exists or not.
+  /// 
+  /// [processCheckerInterval] defaults to 5 seconds.
+  final Duration processCheckerInterval;
+
+  LCUWatcherConfig({ this.disableLogging = false, this.processCheckerInterval = const Duration(seconds: 5)});
+}
+
 class LCUCredentials {
   final String host, username, password;
   final int port;
@@ -40,6 +54,10 @@ class LCUWatcher {
   late final GangplankLogger _logger;
   late final LCUStorage _storage;
 
+  // CONFIG
+
+  late final LCUWatcherConfig _config;
+
   static const _commandWin =
       "WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline";
   final _regexWin = RegExp(r'--install-directory=(.*?)"');
@@ -61,8 +79,10 @@ class LCUWatcher {
   Timer? _timerProcessWatcher;
   StreamSubscription? _lockfileWatcher;
 
-  LCUWatcher({required LCUStorage storage}) {
+  LCUWatcher({required LCUStorage storage, LCUWatcherConfig? config}) {
     _storage = storage;
+
+    _config = config ?? LCUWatcherConfig();
 
     _logger = GangplankLogger(
       service: 'LCU-WATCHER',
@@ -78,7 +98,7 @@ class LCUWatcher {
   void watch() {
     _checkForProcess();
 
-    _logger.log('STARTED');
+    if (!_config.disableLogging) _logger.log('WATCHING');
   }
 
   /// Stop watching the League client.
@@ -92,18 +112,18 @@ class LCUWatcher {
     _onClientClosedStreamController.add(null);
     _storage.credentials = null;
 
-    _logger.log('STOPPED');
+    if (!_config.disableLogging) _logger.log('STOPPED WATCHING');
   }
 
   Future<void> _checkForProcess() async {
-    _logger.log('WAITING TO FIND THE LCU PROCESS');
+    if (!_config.disableLogging) _logger.log('WAITING TO FIND THE LCU PROCESS');
 
     await _searchLockfilePath();
 
     if (!clientIsRunning) {
       // LOCK FILE WAS NOT FOUND, START INTERVALL TO CHECK FOR PROCESS
 
-      _timerProcessWatcher = Timer.periodic(const Duration(seconds: 5), (_) {
+      _timerProcessWatcher = Timer.periodic(_config.processCheckerInterval, (_) {
         _searchLockfilePath();
       });
     }
@@ -128,14 +148,14 @@ class LCUWatcher {
           _storage.credentials = null;
           _lockfileWatcher!.cancel();
 
-          _logger.log('CLIENT CLOSED! LOCKFILE DELETED');
+          if (!_config.disableLogging) _logger.log('CLIENT CLOSED! LOCKFILE DELETED');
 
           _checkForProcess();
         }
       }
     });
 
-    _logger.log('WATCHING LOCKFILE NOW');
+    if (!_config.disableLogging) _logger.log('WATCHING LOCKFILE NOW');
   }
 
   Future<void> _searchLockfilePath() async {
@@ -162,8 +182,8 @@ class LCUWatcher {
         _clientIsRunning = true;
         _onClientStartedStreamController.add(_storage.credentials!);
 
-        _logger.log('CLIENT STARTED! PROCESS FOUND');
-        _logger.log(_storage.credentials.toString());
+        if (!_config.disableLogging) _logger.log('CLIENT STARTED! PROCESS FOUND');
+        if (!_config.disableLogging) _logger.log(_storage.credentials.toString());
 
         _initFileWatcher();
       }

@@ -35,9 +35,15 @@ class GangplankExamplePage extends StatefulWidget {
 
 class _GangplankExamplePageState extends State<GangplankExamplePage> {
   late Gangplank gp;
+  late LCUWatcher watcher;
+  late LCUSocket socket;
+  late LCUHttpClient httpClient;
+  late LCULiveGameWatcher liveGameWatcher;
+
   LCUCredentials? _credentials;
   List<EventResponse> events = [];
   String? currentGameflowPhase;
+  int currentLiveGameTime = 0;
 
   @override
   void initState() {
@@ -45,19 +51,28 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
 
     gp = Gangplank();
 
-    gp.watcher.onClientStarted.listen((credentials) async {
+    watcher = gp.createLCUWatcher();
+    socket = gp.createLCUSocket();
+    httpClient = gp.createLCUHttpClient();
+    liveGameWatcher = gp.createLCULiveGameWatcher(
+      config: LCULiveGameWatcherConfig(
+        disableLogging: false,
+      ),
+    );
+
+    watcher.onClientStarted.listen((credentials) async {
       // CLIENT HAS STARTED
       // NOW WE CAN CONNECT TO THE SOCKET
       // IF YOU TRY TO CONNECT TO SOCKET BEFORE THIS EVENT YOU WILL RAISE AN EXCEPTION (CREDENTIALS NOT PROVIDED)
 
       _credentials = credentials;
 
-      gp.socket.connect();
+      socket.connect();
 
       setState(() {});
     });
 
-    gp.watcher.onClientClosed.listen((_) {
+    watcher.onClientClosed.listen((_) {
       // CLIENT WAS CLOSED
       /* IF THE LCU-SOCKET CONNECTED IT WILL DISCONNECT AUTOMATICALLY
       SINCE THE LEAGUE CLIENT WAS CLOSED*/
@@ -65,13 +80,13 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
       setState(() {});
     });
 
-    gp.socket.onConnect.listen((_) {
+    socket.onConnect.listen((_) {
       // SOCKET CONNECTED
 
       setState(() {});
     });
 
-    gp.socket.onDisconnect.listen((_) {
+    socket.onDisconnect.listen((_) {
       // SOCKET DISCONNECTED
 
       events.clear();
@@ -80,26 +95,54 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
 
     // START WATCHING THE LCU
 
-    gp.watcher.watch();
+    watcher.watch();
 
     /* SUBSCRIBE TO EVENTS -> REMEMBER! ONLY SUBSCRIBE ONCE EVEN WHEN THE SOCKET CLOSES/RECONNECTS
     THE SUBSCRIPTIONS ALWAYS STAY!*/
 
-    gp.socket.subscribe('/lol-lobby/v2/lobby', (event) {
+    socket.subscribe('/lol-lobby/v2/lobby', (event) {
       events.add(event);
       setState(() {});
     });
 
-    gp.socket.subscribe('/lol-gameflow/v1/gameflow-phase', (event) {
+    socket.subscribe('/lol-gameflow/v1/gameflow-phase', (event) {
       currentGameflowPhase = event.data;
       events.add(event);
       setState(() {});
     });
 
-    gp.socket.subscribe('/lol-game-client-chat/v1/buddies/*', (event) {
+    socket.subscribe('/lol-game-client-chat/v1/buddies/*', (event) {
       events.add(event);
       setState(() {});
     });
+  
+    liveGameWatcher.gameFound.listen((_) {
+      print('GAME HAS BEEN FOUND');
+      setState(() {});
+    });
+
+    liveGameWatcher.gameEnded.listen((_) {
+      print('GAME HAS ENDED');
+      setState(() {});
+    });
+
+    liveGameWatcher.gameStarted.listen((gameTime) {
+      print('GAME HAS STARTED $gameTime');
+      setState(() {});
+    });
+
+    liveGameWatcher.gameSummaryUpdate.listen((summary) {
+      //print(summary?.toJson());
+      setState(() {});
+    });
+    
+    liveGameWatcher.gameTimerUpdate.listen((time) {
+      currentLiveGameTime = time;
+      print(currentLiveGameTime);
+      setState(() {});
+    });
+
+    liveGameWatcher.watch();
   }
 
   @override
@@ -133,7 +176,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                           height: 10,
                         ),
                         Text(
-                          _credentials.toString(),
+                          _credentials == null ? 'Not found yet.' : _credentials.toString(),
                         ),
                       ],
                     ))),
@@ -152,17 +195,36 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                         height: 10,
                       ),
                       ListTile(
-                        leading: _buildStatusDot(gp.watcher.clientIsRunning),
-                        title: Text(gp.watcher.clientIsRunning
+                        leading: _buildStatusDot(watcher.clientIsRunning),
+                        title: Text(watcher.clientIsRunning
                             ? 'LCU is running'
                             : 'LCU is not running'),
                         dense: true,
                       ),
                       ListTile(
-                        leading: _buildStatusDot(gp.socket.isConnected),
-                        title: Text(gp.socket.isConnected
+                        leading: _buildStatusDot(socket.isConnected),
+                        title: Text(socket.isConnected
                             ? 'LCU-Socket is connected'
                             : 'LCU-Socket is not connected'),
+                        dense: true,
+                      ),
+                      ListTile(
+                        leading: _buildStatusDot(liveGameWatcher.gameInProgress),
+                        title: Text(liveGameWatcher.gameInProgress
+                            ? 'Player is currently ingame'
+                            : 'Player is currently not ingame'),
+                        dense: true,
+                      ),
+                      ListTile(
+                        leading: _buildStatusDot(liveGameWatcher.gameHasStarted),
+                        title: Text(liveGameWatcher.gameHasStarted
+                            ? 'The active game has started'
+                            : 'If active, has not yet started'),
+                        dense: true,
+                      ),
+                      ListTile(
+                        leading: _buildStatusDot(liveGameWatcher.gameHasStarted),
+                        title: Text(liveGameWatcher.formatSecondsToMMSS(currentLiveGameTime)),
                         dense: true,
                       ),
                     ],
@@ -177,11 +239,11 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
               alignment: WrapAlignment.center,
               children: [
                 ElevatedButton(
-                    onPressed: gp.watcher.clientIsRunning &&
-                            gp.socket.isConnected
+                    onPressed: watcher.clientIsRunning &&
+                            socket.isConnected
                         ? () async {
                             try {
-                              await gp.httpClient.post('/lol-lobby/v2/lobby',
+                              await httpClient.post('/lol-lobby/v2/lobby',
                                   body: {'queueId': 440});
                             } catch (err) {
                               print(err.toString());
@@ -192,11 +254,11 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                       'CREATE FLEX LOBBY',
                     )),
                 ElevatedButton(
-                    onPressed: gp.watcher.clientIsRunning &&
-                            gp.socket.isConnected
+                    onPressed: watcher.clientIsRunning &&
+                            socket.isConnected
                         ? () async {
                             try {
-                              await gp.httpClient.post('/lol-lobby/v2/lobby',
+                              await httpClient.post('/lol-lobby/v2/lobby',
                                   body: {'queueId': 420});
                             } catch (err) {
                               print(err.toString());
@@ -207,12 +269,12 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                       'CREATE SOLO/DUO LOBBY',
                     )),
                 ElevatedButton(
-                    onPressed: gp.watcher.clientIsRunning &&
-                            gp.socket.isConnected &&
+                    onPressed: watcher.clientIsRunning &&
+                            socket.isConnected &&
                             currentGameflowPhase == 'Lobby'
                         ? () async {
                             try {
-                              await gp.httpClient.delete('/lol-lobby/v2/lobby');
+                              await httpClient.delete('/lol-lobby/v2/lobby');
                             } catch (err) {
                               print(err.toString());
                             }

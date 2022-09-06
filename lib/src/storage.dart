@@ -6,10 +6,11 @@ import 'package:gangplank/src/lcu_watcher.dart';
 
 class LCUStorage {
   SecurityContext? securityContext;
-  bool disableLogging = false;
+  late bool disableLogging;
   LCUCredentials? credentials;
+  String gameClientApi = 'https://127.0.0.1:2999/liveclientdata/';
 
-  LCUStorage() {
+  LCUStorage({ this.disableLogging = false }) {
     readCertificate();
   }
 
