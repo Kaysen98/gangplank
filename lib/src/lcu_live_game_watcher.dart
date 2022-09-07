@@ -4,7 +4,6 @@ import 'dart:convert';
 import 'package:gangplank/src/logging.dart';
 import 'package:gangplank/src/storage.dart';
 import 'package:http/http.dart';
-import 'package:collection/collection.dart';
 
 class LCULiveGameWatcherConfig {
   /// Disables the logging for the [LCULiveGameWatcher].
@@ -176,7 +175,7 @@ class LCULiveGameWatcher {
     if (summary != null) {
       _gameSummaryUpdateStreamController.add(summary);
 
-      if (!gameHasStarted && summary.eventData.firstWhereOrNull((e) => e['EventName'] == 'GameStart') != null) {
+      if (!gameHasStarted && summary.eventData.firstWhere((e) => e['EventName'] == 'GameStart', orElse: () => null) != null) {
         gameHasStarted = true;
 
         double gt = summary.gameStats['gameTime'];
