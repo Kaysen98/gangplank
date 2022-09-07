@@ -15,3 +15,5 @@
 
 * Added LCULiveGameWatcher
 * Changed syntax on how to instantiate all services
+* Updated README.md
+* Updated example

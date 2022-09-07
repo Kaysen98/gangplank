@@ -37,13 +37,13 @@ class Gangplank {
     );
   }
 
-  /// Initializes an instance of [LCUWatcher] and returns it.
+  /// Instantiates an instance of [LCUWatcher] and returns it.
   /// 
   /// Optionally you can provide a [LCUWatcherConfig].
   /// 
   /// Only call this method once and reuse the instance.
   LCUWatcher createLCUWatcher({ LCUWatcherConfig? config }) {
-    assert(_watcher == null, 'ONLY INITIALIZE ONE INSTANCE OF LCUWATCHER');
+    assert(_watcher == null, 'ONLY INSTANTIATE ONE INSTANCE OF LCUWATCHER');
 
     _watcher = LCUWatcher(
       storage: _storage,
@@ -53,13 +53,13 @@ class Gangplank {
     return _watcher!;
   }
 
-  /// Initializes an instance of [LCUSocket] and returns it.
+  /// Instantiates an instance of [LCUSocket] and returns it.
   /// 
   /// Optionally you can provide a [LCUSocketConfig].
   /// 
   /// Only call this method once and reuse the instance.
   LCUSocket createLCUSocket({ LCUSocketConfig? config }) {
-    assert(_socket == null, 'ONLY INITIALIZE ONE INSTANCE OF LCUSOCKET');
+    assert(_socket == null, 'ONLY INSTANTIATE ONE INSTANCE OF LCUSOCKET');
 
     _socket = LCUSocket(
       storage: _storage,
@@ -69,13 +69,13 @@ class Gangplank {
     return _socket!;
   }
 
-  /// Initializes an instance of [LCUHttpClient] and returns it.
+  /// Instantiates an instance of [LCUHttpClient] and returns it.
   /// 
   /// Optionally you can provide a [LCUHttpClientConfig].
   /// 
   /// Only call this method once and reuse the instance.
   LCUHttpClient createLCUHttpClient({ LCUHttpClientConfig? config }) {
-    assert(_httpClient == null, 'ONLY INITIALIZE ONE INSTANCE OF LCUHTTPCLIENT');
+    assert(_httpClient == null, 'ONLY INSTANTIATE ONE INSTANCE OF LCUHTTPCLIENT');
 
     _httpClient = LCUHttpClient(
       storage: _storage,
@@ -85,7 +85,7 @@ class Gangplank {
     return _httpClient!;
   }
 
-  /// Initializes an instance of [LCULiveGameWatcher] and returns it.
+  /// Instantiates an instance of [LCULiveGameWatcher] and returns it.
   /// 
   /// Optionally you can provide a [LCULiveGameWatcherConfig].
   /// 
@@ -93,7 +93,7 @@ class Gangplank {
   /// 
   /// The [LCULiveGameWatcher] works independently so you can call the watch function at any point.
   LCULiveGameWatcher createLCULiveGameWatcher({ LCULiveGameWatcherConfig? config }) {
-    assert(_liveGameWatcher == null, 'ONLY INITIALIZE ONE INSTANCE OF LCULIVEGAMEWATCHER');
+    assert(_liveGameWatcher == null, 'ONLY INSTANTIATE ONE INSTANCE OF LCULIVEGAMEWATCHER');
 
     _liveGameWatcher = LCULiveGameWatcher(
       storage: _storage,
@@ -103,7 +103,7 @@ class Gangplank {
     return _liveGameWatcher!;
   }
 
-  /// Disposes [LCUWatcher], [LCUSocket] and [LCULiveGameWatcherConfig] if they were initialized.
+  /// Disposes [LCUWatcher], [LCUSocket] and [LCULiveGameWatcherConfig] if they were instantiated.
   void dispose() {
     _watcher?.dispose();
     _socket?.dispose();
