@@ -104,7 +104,7 @@ class LCUHttpClient {
       params: params,
     );
 
-    if (_config.getRoutesToCache.contains(endpoint)) {
+    if (_config.getRoutesToCache.any((e) => endpoint.toLowerCase().contains(e.toLowerCase()))) {
       // ROUTE SHOULD BE CACHED
 
       await cache.write(endpoint, result, _config.cacheExpiration.inSeconds);

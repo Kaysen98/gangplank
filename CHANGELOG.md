@@ -1,3 +1,7 @@
+## 1.2.2
+
+* Bugfix: LCUHttpClient does cache properly now
+
 ## 1.2.1
 
 * Firing an event manually in LCUSocket now requires ManualEventResponse instead of EventResponse to differentiate a normal from a manual/test event. 
