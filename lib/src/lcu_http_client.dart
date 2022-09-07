@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter_cache/flutter_cache.dart' as cache;
 import 'package:http/http.dart' as http;
 
 import 'package:gangplank/src/lcu_watcher.dart';
@@ -18,7 +19,31 @@ class LCUHttpClientConfig {
   /// [requestTimeout] defaults to 8 seconds.
   final Duration requestTimeout;
 
-  LCUHttpClientConfig({ this.disableLogging = false, this.requestTimeout = const Duration(seconds: 8) });
+  /// You can supply routes you want to cache.
+  /// 
+  /// Usecase: Maybe you want to display the current lobby with it's members.
+  /// On EVERY lobby update you get summoner data for all members.
+  /// This builds up alot of requests to the summoner endpoint.
+  /// Since the summoner data won't change frequently you can supply the endpoint route here to cache it.
+  ///
+  /// The application will then take the data out of cache instead of requesting the data from LCU.
+  /// 
+  /// The routes are matched via contains and not equal which means if you supply the endpoint `/lol-summoner/v1/summoners` all routes will be cached that include that string.
+  /// In this case `/lol-summoner/v1/summoners?name=test` e.g. will be cached.
+  final List<String> getRoutesToCache;
+
+  /// The lifetime of an object in the cache.
+  /// 
+  /// [cacheExpiration] defaults to 30 minutes.
+  final Duration cacheExpiration;
+
+
+  LCUHttpClientConfig({ 
+    this.disableLogging = false, 
+    this.requestTimeout = const Duration(seconds: 8), 
+    this.getRoutesToCache = const [],
+    this.cacheExpiration = const Duration(minutes: 30),
+  });
 }
 
 enum HttpMethod { get, post, delete, patch, put }
@@ -63,13 +88,29 @@ class LCUHttpClient {
   /// Throws [LCUHttpClientException] on error containing the message, http status and error code.
   /// You can call `toString()` on the exception to print the whole exception.
   ///
-  /// Returns the requested resources payload.
+  /// Returns the requested resources payload either (from cache if route is supplied as an endpoint that should be cached).
   Future get(String endpoint, {Map<String, dynamic>? params}) async {
-    return await _request(
+    final cachedResult = await cache.load(endpoint);
+
+    if (cachedResult != null) {
+      if (!_config.disableLogging) _logger.log('RETURNED FROM CACHE: $endpoint');
+
+      return cachedResult;
+    }
+
+    final result = await _request(
       endpoint,
       HttpMethod.get,
       params: params,
     );
+
+    if (_config.getRoutesToCache.contains(endpoint)) {
+      // ROUTE SHOULD BE CACHED
+
+      await cache.write(endpoint, result, _config.cacheExpiration.inSeconds);
+    }
+
+    return result;
   }
 
   /// Fires a DELETE request against the League client.

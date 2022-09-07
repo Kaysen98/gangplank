@@ -54,13 +54,17 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
     watcher = gp.createLCUWatcher(
       config: LCUWatcherConfig(
         disableLogging: true,
-        processCheckerInterval: const Duration(seconds: 2),
       )
     );
 
     socket = gp.createLCUSocket();
 
-    httpClient = gp.createLCUHttpClient();
+    httpClient = gp.createLCUHttpClient(
+      config: LCUHttpClientConfig(
+        getRoutesToCache: ['/lol-summoner/v1/current-summoner'],
+        cacheExpiration: const Duration(minutes: 20),
+      )
+    );
 
     watcher.onClientStarted.listen((credentials) async {
       // CLIENT HAS STARTED

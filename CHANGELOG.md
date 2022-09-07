@@ -1,3 +1,9 @@
+## 1.1.1
+
+* LCUHttpClient now includes a configurable cache to reduce the requests towards the LCU API.
+* Updated README.md
+* Updated example
+
 ## 1.0.1
 
 * Bugfix: LCULiveGameWatcher's gametime is now always ceiled to represent the correct ingame timer

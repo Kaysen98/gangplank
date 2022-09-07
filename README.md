@@ -169,7 +169,14 @@ final gp = Gangplank();
 
 // OF COURSE ONLY USABLE AFTER THE WATCHER FIRED THE ONCLIENTSTARTED EVENT
 
-final httpClient = gp.createLCUHttpClient();
+// YOU CAN PASS ENDPOINT ROUTES THAT SHALL BE CACHED
+
+final httpClient = gp.createLCUHttpClient(
+    config: LCUHttpClientConfig(
+        getRoutesToCache: ['/lol-summoner/v1/current-summoner'],
+        cacheExpiration: const Duration(minutes: 20),
+    ),
+);
 
 try {
     // QUEUEID 440 WILL RESULT IN A FLEX RANKED LOBBY
