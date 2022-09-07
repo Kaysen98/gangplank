@@ -52,6 +52,13 @@ class EventResponse {
   }
 }
 
+class ManualEventResponse extends EventResponse {
+  ManualEventResponse({
+    required super.uri,
+    super.data,
+  });
+}
+
 class LcuMessageType {
   static const int welcome = 0;
   static const int prefix = 1;
@@ -302,6 +309,7 @@ class LCUSocket {
   }
 
   /// Unsubscribes specific eventlistener by function.
+  /// 
   /// To make this work you need to have a named function in the subscribe call instead of an anonymous function.
   void unsubscribeSpecific(Function(EventResponse) function) {
     // REMOVE FROM SUBSCRIPTION MAP
@@ -313,11 +321,14 @@ class LCUSocket {
     }
   }
 
-  /// Fire an event manually providing [path] and [eventResponse].
+  /// Fire an event manually providing [path] and [manualEventResponse].
+  /// 
+  /// [ManualEventResponse] has the same implementation as [EventResponse] but you can differentiate a normal from a manual/test event if you check the type.
+  /// 
   /// If you subscribed to `/test` e.g. and you call [fireEvent] with the path `/test` it will raise an event in your subscription handler.
-  void fireEvent(String path, EventResponse eventResponse) {
+  void fireEvent(String path, ManualEventResponse manualEventResponse) {
     if (_subscriptions.containsKey(path)) {
-      _subscriptions[path]!.forEach((callback) => callback(eventResponse));
+      _subscriptions[path]!.forEach((callback) => callback(manualEventResponse));
     }
   }
 

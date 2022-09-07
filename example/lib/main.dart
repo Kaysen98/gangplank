@@ -132,7 +132,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
 
     socket.fireEvent(
         '/lol-lobby/v2/lobby', 
-        EventResponse(
+        ManualEventResponse(
             uri: '/lol-lobby/v2/lobby', 
             data: { 'mockedData': true }
         ),

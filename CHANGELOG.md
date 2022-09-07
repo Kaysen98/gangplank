@@ -1,3 +1,9 @@
+## 1.2.1
+
+* Firing an event manually in LCUSocket now requires ManualEventResponse instead of EventResponse to differentiate a normal from a manual/test event. 
+* Updated README.md
+* Updated example
+
 ## 1.1.1
 
 * LCUHttpClient now includes a configurable cache to reduce the requests towards the LCU API.
