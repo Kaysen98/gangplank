@@ -19,7 +19,7 @@ class GangplankLogger {
     if (kDebugMode && !storage.disableLogging) {
       final text = 'GANGPLANK - $service - ERROR: $message';
       print('\x1B[31m$text\x1B[0m');
-      print(err.toString());
+      print('\x1B[31m${err.toString()}\x1B[0m');
     }
   }
 }

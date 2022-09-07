@@ -12,7 +12,7 @@ class LCULiveGameWatcherConfig {
   /// [disableLogging] defaults to `false`.
   final bool disableLogging;
 
-  /// The interval used to check wether there is an active League of Legends game.
+  /// The interval used to check whether there is an active League of Legends game.
   /// 
   /// [gamePresenceCheckerInterval] defaults to 10 seconds.
   final Duration gamePresenceCheckerInterval;
@@ -22,19 +22,19 @@ class LCULiveGameWatcherConfig {
   /// [gameSummaryInterval] defaults to 5 seconds.
   final Duration gameSummaryInterval;
 
-  /// Wether to fetch the playerlist and put it into the summary.
+  /// Whether to fetch the playerlist and put it into the summary.
   /// 
   /// If you set it to `false` the summaries playerList property will always be an empty list.
   /// 
   /// [fetchPlayerList] defaults to `true`.
   final bool fetchPlayerList;
 
-  /// Wether to emit `null` on the game summary update stream when the game ended.
+  /// Whether to emit `null` on the game summary update stream when the game ended.
   /// 
   /// [emitNullForGameSummaryUpdateOnGameEnded] defaults to `true`.
   final bool emitNullForGameSummaryUpdateOnGameEnded;
 
-  /// Wether to emit `0` on the game timer update stream when the game ended.
+  /// Whether to emit `0` on the game timer update stream when the game ended.
   /// 
   /// [emitResettedGameTimerOnGameEnded] defaults to `true`.
   final bool emitResettedGameTimerOnGameEnded;
@@ -130,7 +130,7 @@ class LCULiveGameWatcher {
     if (!_config.disableLogging) _logger.log('WATCHING');
   }
 
-  void stop() {
+  void stopWatching() {
     _gamePresenceWatcherTimer?.cancel();
     _gameWatcherTimer?.cancel();
     _gameTimerUpdateTimer?.cancel();

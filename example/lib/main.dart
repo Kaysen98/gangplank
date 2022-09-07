@@ -51,14 +51,16 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
 
     gp = Gangplank();
 
-    watcher = gp.createLCUWatcher();
-    socket = gp.createLCUSocket();
-    httpClient = gp.createLCUHttpClient();
-    liveGameWatcher = gp.createLCULiveGameWatcher(
-      config: LCULiveGameWatcherConfig(
-        disableLogging: false,
-      ),
+    watcher = gp.createLCUWatcher(
+      config: LCUWatcherConfig(
+        disableLogging: true,
+        processCheckerInterval: const Duration(seconds: 2),
+      )
     );
+
+    socket = gp.createLCUSocket();
+
+    httpClient = gp.createLCUHttpClient();
 
     watcher.onClientStarted.listen((credentials) async {
       // CLIENT HAS STARTED
@@ -115,35 +117,80 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
       events.add(event);
       setState(() {});
     });
+
+    // SUBSCRIBE FROM A SPECIFIC EVENT LISTENER BY FUNCTION (NO ANONYMOUS FUNCTION)
+
+    socket.subscribe('/lol-lobby/v2/lobby', onLobbyEvent);
+
+    // FIRE AN EVENT MANUALLY TO TEST AND MOCK EVENT LISTENERS
+
+    socket.fireEvent(
+        '/lol-lobby/v2/lobby', 
+        EventResponse(
+            uri: '/lol-lobby/v2/lobby', 
+            data: { 'mockedData': true }
+        ),
+    );
+
+    // UPPER WILL RESULT THIS EVENT LISTENER TO FIRE AND EMIT THE DATA GIVEN ABOVE
+
+    socket.subscribe('/lol-lobby/v2/lobby', (event) {
+        // EVENT.uri = '/lol-lobby/v2/lobby';
+        // EVENT.data = {'mockedData': true };
+    });
+
+    // UNSUBSCRIBE FROM A SPECIFIC EVENT LISTENER BY FUNCTION (NO ANONYMOUS FUNCTION)
+
+    socket.unsubscribeSpecific(onLobbyEvent);
+    
+    liveGameWatcher = gp.createLCULiveGameWatcher(
+      config: LCULiveGameWatcherConfig(
+        disableLogging: true,
+        fetchPlayerList: false,
+        gamePresenceCheckerInterval: const Duration(seconds: 5),
+        gameSummaryInterval: const Duration(seconds: 2),
+        emitNullForGameSummaryUpdateOnGameEnded: false,
+        emitResettedGameTimerOnGameEnded: false,
+      ),
+    );
   
     liveGameWatcher.gameFound.listen((_) {
-      print('GAME HAS BEEN FOUND');
+      // EMITS WHEN AN ONGOING GAME IS FOUND
       setState(() {});
     });
 
     liveGameWatcher.gameEnded.listen((_) {
-      print('GAME HAS ENDED');
+      // EMITS WHEN THE ONGOING GAME ENDS OR IS TERMINATED
       setState(() {});
     });
 
     liveGameWatcher.gameStarted.listen((gameTime) {
-      print('GAME HAS STARTED $gameTime');
+      // EMITS WHEN THE ONGOING GAME ACTUALLY STARTED WITH THE CURRENT GAMETIME
       setState(() {});
     });
 
     liveGameWatcher.gameSummaryUpdate.listen((summary) {
-      //print(summary?.toJson());
+      /* EMITS A GAMESUMMARY OF DATA EXPOSED BY THE GAMECLIENT
+      EMITS IN AN INTERVAL YOU CAN CONFIGURE YOURSELF */
       setState(() {});
     });
     
     liveGameWatcher.gameTimerUpdate.listen((time) {
+      // EMITS WHEN THE GAME TIMER IS UPDATED -> EVERY SECOND ONCE
+
+      /* THIS FUNCTION WILL CONVERT SECONDS INTO THE MM:SS FORMAT
+      WHICH CAN BE USED TO DISPLAY THE CURRENT INGAME TIMER*/
+
       currentLiveGameTime = time;
-      print(currentLiveGameTime);
+      print(liveGameWatcher.formatSecondsToMMSS(time));
       setState(() {});
     });
 
+    // START WATCHING THE GAMECLIENT
     liveGameWatcher.watch();
   }
+
+  void onLobbyEvent(EventResponse data) => print(data);
 
   @override
   void dispose() {

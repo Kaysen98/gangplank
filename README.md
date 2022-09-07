@@ -25,8 +25,35 @@ This package ONLY supports windows and macOS at the moment.
 1. LCUWatcher watches your League client and will notify you when the client is started and/or closed.
 2. LCUSocket is responsible for the websocket connection. It connects to the League client. You can subscribe to events you want to listen to.
 3. LCUHttpClient provides the most common HTTP methods to send HTTP requests to the League client (e.g. create a lobby, start matchmaking etc.).
+4. LCULiveGameWatcher watches your League of Legends gameclient and will notify in several ways (more below).
 
 # Usage
+## Beforehand
+The LCUWatcher, LCUSocket, LCUHttpClient and LCULiveGameWatcher shall be solely instanciated by using the Gangplank class. That ensures everything works as expected. If you try to create an instance of one services multiple times on the same Gangplank instance it will throw an assert error.
+
+```dart
+final gp = Gangplank(
+    // DISABLE LOGGING FOR WHOLE PACKAGE
+    
+    disableLogging: true,
+);
+
+final watcher = gp.createLCUWatcher(
+    config: LCUWatcherConfig(
+        // DISABLE LOGGING ONLY FOR LCUWATCHER
+        disableLogging: true,
+
+        // THE INTERVAL USED TO CHECK WHETHER THE LEAGUE OF LEGENDS PROCESS EXISTS OR NOT
+        processCheckerInterval: const Duration(seconds: 2),
+    )
+);
+final socket = gp.createLCUSocket();
+final httpClient = gp.createLCUHttpClient();
+final liveGameWatcher = gp.createLCULiveGameWatcher();
+```
+
+Every service listed can take a config object allowing you to change the behaviour.
+
 ## HttpOverrides
 
 Before you start using this package, make sure you override HTTP globally to prevent handshake exceptions when connecting to the LCU.
@@ -45,77 +72,109 @@ The LCUWatcher is the first instance you need to use for the other services to w
 
 ```dart
 final gp = Gangplank();
+final watcher = gp.createLCUWatcher();
+final socket = gp.createLCUSocket();
 
-gp.watcher.onClientStarted.listen((credentials) {
+watcher.onClientStarted.listen((credentials) {
     // IS CALLED WHEN THE LCUWATCHER FOUND A RUNNING LEAGUE CLIENT INSTANCE
     // NOW YOU CAN SAFELY USE THE LCUHTTPCLIENT
 
     /* THE CLIENT IS STARTED, YOU CAN NOW START CONNECTING TO THE WEBSOCKET THAT THE LEAGUE CLIENT EXPOSES*/
     // WHEN THE SOCKET SUCCESSFULLY CONNECTED IT WILL FIRE THE onConnect event
 
-    gp.socket.connect();
+    socket.connect();
 });
 
-gp.watcher.onClientClosed.listen((_) {
+watcher.onClientClosed.listen((_) {
     // THE LEAGUE CLIENT IS CLOSED
 });
 
-gp.socket.onConnect.listen((_) {
+socket.onConnect.listen((_) {
     // THE SOCKET IS NOW CONNECTED
 });
 
-gp.socket.onDisconnect.listen((_) {
+socket.onDisconnect.listen((_) {
     // THE SOCKET IS NOW DISCONNECTED
 });
 
 // START WATCHING
 
-gp.watcher.watch();
+watcher.watch();
 ```
 
 If you want to you can also manually make the LCUWatcher stop watching or disconnect the LCUSocket.
 
 ```dart
-gp.watcher.stopWatching();
-gp.socket.disconnect();
+watcher.stopWatching();
+socket.disconnect();
 ```
 
 ## Subscribe to socket events
 You can subscribe to the same events multiple times in your application if you need it in different widgets/components/services. If the LCUSocket disconnects and reconnects the subscriptions will stay and will not be disposed. That means subscribing once is enough.
 
 ```dart
-gp.socket.subscribe('*', (event) {
+socket.subscribe('*', (event) {
     // HERE YOU RECEIVE ALL EVENTS THE LEAGUE CLIENT FIRES
 });
 
-gp.socket.subscribe('/lol-lobby/v2/*', (event) {
+socket.subscribe('/lol-lobby/v2/*', (event) {
     // YOU CAN USE WILDCARDS AT THE END OF THE GIVEN PATH
     // USING WILDCARDS WILL MATCH ALL EVENTS THAT START WITH GIVEN PATH BEFORE THE WILDCARD OPERATOR
-
 });
 
-gp.socket.subscribe('*/v2/lobby', (event) {
+socket.subscribe('*/v2/lobby', (event) {
     // YOU CAN USE WILDCARDS AT THE START OF THE GIVEN PATH
     // USING WILDCARDS WILL MATCH ALL EVENTS THAT END WITH GIVEN PATH BEFORE THE WILDCARD OPERATOR
 });
 
-gp.socket.subscribe('/lol-lobby/v2/lobby', (event) {
+socket.subscribe('/lol-lobby/v2/lobby', (event) {
     // YOU CAN ALSO JUST MATCH THE PATH COMPLETELY
 });
 
 // UNSUBSCRIBE FROM EVENT
-gp.socket.unsubscribe('/lol-lobby/v2/lobby');
+socket.unsubscribe('/lol-lobby/v2/lobby');
+
+// SUBSCRIBE AND UNSUBSCRIBE FROM A SPECIFIC EVENT LISTENER BY FUNCTION (NO ANONYMOUS FUNCTION)
+
+socket.subscribe('/lol-lobby/v2/lobby', onLobbyEvent);
+
+socket.unsubscribeSpecific(onLobbyEvent);
+
+void onLobbyEvent(EventResponse data) => print(data);
+
+// FIRE AN EVENT MANUALLY TO TEST AND MOCK EVENT LISTENERS
+
+socket.fireEvent(
+    '/lol-lobby/v2/lobby', 
+    EventResponse(
+        uri: '/lol-lobby/v2/lobby', 
+        data: { 'mockedData': true }
+    ),
+);
+
+// UPPER WILL RESULT THIS EVENT LISTENER TO FIRE AND EMIT THE DATA GIVEN ABOVE
+
+socket.subscribe('/lol-lobby/v2/lobby', (event) {
+    // EVENT.uri = '/lol-lobby/v2/lobby';
+    // EVENT.data = {'mockedData': true };
+});
 ```
 
-## Perform HTTP requests
+## LUCHttpClient (perform HTTP requests)
 As mentioned above, HTTP requests are only safe to perform when the onClientStarted event was fired. Otherwise an assert error will be thrown. The LCUHttpClient uses it's own exception class. This exception class called LCUHttpClientException includes the error message, the http status and error code provided by the League client when an error occurs.
 
 ### Create a lobby or leave it
 ```dart
+final gp = Gangplank();
+
+// OF COURSE ONLY USABLE AFTER THE WATCHER FIRED THE ONCLIENTSTARTED EVENT
+
+final httpClient = gp.createLCUHttpClient();
+
 try {
     // QUEUEID 440 WILL RESULT IN A FLEX RANKED LOBBY
 
-    await gp.httpClient.post('/lol-lobby/v2/lobby', body: { 'queueId': 440 });
+    await httpClient.post('/lol-lobby/v2/lobby', body: { 'queueId': 440 });
 } catch (err) {
     // USING TOSTRING() WILL PRINT ALL PROPERTIES OF THE EXCEPTION
 
@@ -125,12 +184,78 @@ try {
 try {
     // LEAVE THE CURRENT LOBBY
 
-    await gp.httpClient.delete('/lol-lobby/v2/lobby');
+    await httpClient.delete('/lol-lobby/v2/lobby');
 } catch (err) {
     // USING TOSTRING() WILL PRINT ALL PROPERTIES OF THE EXCEPTION
 
     print(err.toString());
 }
+```
+
+## LCULiveGameWatcher
+The LCULiveGameWatcher communicates with the game client api. The game client is the actual application that is launched after champselect in which you actively play the game. The LCULiveGameWatcher works independently from the other services and can be used without dependencies unlike the LCUSocket and LCUHttpClient which rely on the League client to be running first. This service will expose the following API.
+
+Subscribe to a stream which emits ..
+* When an ongoing game is found or terminated
+* When an ongoing game is fully loaded and started (the player can interact ingame)
+* When you receive an update on data exposed by the gameclient (gameSummaryUpdate)
+* When the ingame timer changes
+
+Following data is requested on gameSummaryUpdate:
+* The gamestats (endpoint: gamestats)
+* The eventdata (endpoint: eventdata)
+* The whole playerlist (endpoint: playerlist) <-- Can be disabled
+```dart
+final gp = Gangplank();
+
+final liveGameWatcher = gp.createLCULiveGameWatcher();
+
+liveGameWatcher.gameFound.listen((_) {
+    // EMITS WHEN AN ONGOING GAME IS FOUND
+});
+
+liveGameWatcher.gameEnded.listen((_) {
+    // EMITS WHEN THE ONGOING GAME ENDS OR IS TERMINATED
+});
+
+liveGameWatcher.gameStarted.listen((gameTime) {
+    // EMITS WHEN THE ONGOING GAME ACTUALLY STARTED WITH THE CURRENT GAMETIME
+});
+
+liveGameWatcher.gameSummaryUpdate.listen((summary) {
+    /* EMITS A GAMESUMMARY OF DATA EXPOSED BY THE GAMECLIENT
+    EMITS IN AN INTERVAL YOU CAN CONFIGURE YOURSELF */
+});
+
+liveGameWatcher.gameTimerUpdate.listen((time) {
+    // EMITS WHEN THE GAME TIMER IS UPDATED -> EVERY SECOND ONCE
+
+    /* THIS FUNCTION WILL CONVERT SECONDS INTO THE MM:SS FORMAT
+    WHICH CAN BE USED TO DISPLAY THE CURRENT INGAME TIMER*/
+
+    print(liveGameWatcher.formatSecondsToMMSS(time));
+});
+
+liveGameWatcher.watch();
+```
+You can also pass in a config object to the createLCULiveGameWatcher function.
+```dart
+final liveGameWatcher = gp.createLCULiveGameWatcher(
+    config: LCULiveGameWatcherConfig(
+        disableLogging: true,
+        fetchPlayerList: false,
+        gamePresenceCheckerInterval: const Duration(seconds: 5),
+        gameSummaryInterval: const Duration(seconds: 2),
+        emitNullForGameSummaryUpdateOnGameEnded: false,
+        emitResettedGameTimerOnGameEnded: false,
+    ),
+);
+```
+
+If you want to you can also manually make the LCULiveGameWatcher stop watching.
+
+```dart
+liveGameWatcher.stopWatching();
 ```
 
 ## Dispose resources

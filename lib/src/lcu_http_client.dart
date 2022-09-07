@@ -236,7 +236,7 @@ class LCUHttpClient {
 
       return responseBody;
     } catch (err) {
-      if (!_config.disableLogging) _logger.log('ERROR OCCURED REQUESTING $url');
+      if (!_config.disableLogging) _logger.err('ERROR OCCURED REQUESTING $url', err);
 
       if (err is TimeoutException) {
         throw LCUHttpClientException(

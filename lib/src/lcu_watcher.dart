@@ -12,7 +12,7 @@ class LCUWatcherConfig {
   /// [disableLogging] defaults to `false`.
   final bool disableLogging;
 
-  /// The interval used to check wether the League of Legends process exists or not.
+  /// The interval used to check whether the League of Legends process exists or not.
   /// 
   /// [processCheckerInterval] defaults to 5 seconds.
   final Duration processCheckerInterval;
