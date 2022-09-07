@@ -1,15 +1,13 @@
-## 0.0.1
+## 1.0.1
 
-* Initial release
-* Added LCUWatcher, LCUSocket, LCUHttpClient
+* Bugfix: LCULiveGameWatcher's gametime is now always ceiled to represent the correct ingame timer
 
-## 0.0.1+1
-
-* Updated README.md
-
-## 0.0.1+2
+## 1.0.0+1
 
 * Updated README.md
+* Updated example
+* Added comments/function descriptions
+* Updated property names of LCULiveGameWatcher
 
 ## 1.0.0
 
@@ -18,9 +16,15 @@
 * Updated README.md
 * Updated example
 
-## 1.0.0+1
+## 0.0.1+2
 
 * Updated README.md
-* Updated example
-* Added comments/function descriptions
-* Updated property names of LCULiveGameWatcher
+
+## 0.0.1+1
+
+* Updated README.md
+
+## 0.0.1
+
+* Initial release
+* Added LCUWatcher, LCUSocket, LCUHttpClient
