@@ -9,11 +9,13 @@ import 'package:gangplank/src/storage.dart';
 
 class LCUHttpClientConfig {
   /// Disables the logging for the [LCUHttpClient].
+  /// 
   /// [disableLogging] defaults to false.
   final bool disableLogging;
 
   /// The timeout used on HTTP requests.
-  /// [tryConnectInterval] defaults to 8 seconds.
+  /// 
+  /// [requestTimeout] defaults to 8 seconds.
   final Duration requestTimeout;
 
   LCUHttpClientConfig({ this.disableLogging = false, this.requestTimeout = const Duration(seconds: 8) });
@@ -225,6 +227,7 @@ class LCUHttpClient {
           (responseBody['errorCode'] != null ||
               responseBody['httpStatus'] != null ||
               responseBody['message'] != null)) {
+
         throw LCUHttpClientException(
           message: responseBody['message'],
           httpStatus: responseBody['httpStatus'],

@@ -82,8 +82,10 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
       setState(() {});
     });
 
-    socket.onConnect.listen((_) {
+    socket.onConnect.listen((_) async {
       // SOCKET CONNECTED
+
+      currentGameflowPhase = await httpClient.get('/lol-gameflow/v1/gameflow-phase');
 
       setState(() {});
     });
@@ -149,8 +151,8 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
         fetchPlayerList: false,
         gamePresenceCheckerInterval: const Duration(seconds: 5),
         gameSummaryInterval: const Duration(seconds: 2),
-        emitNullForGameSummaryUpdateOnGameEnded: false,
-        emitResettedGameTimerOnGameEnded: false,
+        // emitNullForGameSummaryUpdateOnGameEnded: false,
+        // emitResettedGameTimerOnGameEnded: false,
       ),
     );
   
@@ -187,7 +189,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
     });
 
     // START WATCHING THE GAMECLIENT
-    
+
     liveGameWatcher.watch();
   }
 

@@ -191,7 +191,7 @@ class LCULiveGameWatcher {
         gameHasStarted = true;
 
         double gt = summary.gameStats['gameTime'];
-        int gameTime = gt < 1 ? gt.floor() : gt.ceil();
+        int gameTime = gt.ceil();
         
         _internalGameTime = gameTime;
 
@@ -213,7 +213,7 @@ class LCULiveGameWatcher {
           gameHasStarted = true;
 
           double gt = summary.gameStats['gameTime'];
-          int gameTime = gt < 1 ? gt.floor() : gt.ceil();
+          int gameTime = gt.ceil();
 
           _internalGameTime = gameTime;
 
