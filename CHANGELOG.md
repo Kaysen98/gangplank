@@ -17,3 +17,10 @@
 * Changed syntax on how to instantiate all services
 * Updated README.md
 * Updated example
+
+## 1.0.0+1
+
+* Updated README.md
+* Updated example
+* Added comments/function descriptions
+* Updated property names of LCULiveGameWatcher

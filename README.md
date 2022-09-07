@@ -25,11 +25,11 @@ This package ONLY supports windows and macOS at the moment.
 1. LCUWatcher watches your League client and will notify you when the client is started and/or closed.
 2. LCUSocket is responsible for the websocket connection. It connects to the League client. You can subscribe to events you want to listen to.
 3. LCUHttpClient provides the most common HTTP methods to send HTTP requests to the League client (e.g. create a lobby, start matchmaking etc.).
-4. LCULiveGameWatcher watches your League of Legends gameclient and will notify in several ways (more below).
+4. LCULiveGameWatcher watches your League gameclient and will notify in several ways (more below).
 
 # Usage
 ## Beforehand
-The LCUWatcher, LCUSocket, LCUHttpClient and LCULiveGameWatcher shall be solely instanciated by using the Gangplank class. That ensures everything works as expected. If you try to create an instance of one services multiple times on the same Gangplank instance it will throw an assert error.
+The LCUWatcher, LCUSocket, LCUHttpClient and LCULiveGameWatcher shall be solely instantiated by using the Gangplank class. That ensures everything is working as expected. If you try to create an instance of one service multiple times using the same Gangplank instance it will throw an assert error.
 
 ```dart
 final gp = Gangplank(
@@ -210,24 +210,24 @@ final gp = Gangplank();
 
 final liveGameWatcher = gp.createLCULiveGameWatcher();
 
-liveGameWatcher.gameFound.listen((_) {
+liveGameWatcher.onGameFound.listen((_) {
     // EMITS WHEN AN ONGOING GAME IS FOUND
 });
 
-liveGameWatcher.gameEnded.listen((_) {
+liveGameWatcher.onGameEnded.listen((_) {
     // EMITS WHEN THE ONGOING GAME ENDS OR IS TERMINATED
 });
 
-liveGameWatcher.gameStarted.listen((gameTime) {
+liveGameWatcher.onGameStarted.listen((gameTime) {
     // EMITS WHEN THE ONGOING GAME ACTUALLY STARTED WITH THE CURRENT GAMETIME
 });
 
-liveGameWatcher.gameSummaryUpdate.listen((summary) {
+liveGameWatcher.onGameSummaryUpdate.listen((summary) {
     /* EMITS A GAMESUMMARY OF DATA EXPOSED BY THE GAMECLIENT
     EMITS IN AN INTERVAL YOU CAN CONFIGURE YOURSELF */
 });
 
-liveGameWatcher.gameTimerUpdate.listen((time) {
+liveGameWatcher.onGameTimerUpdate.listen((time) {
     // EMITS WHEN THE GAME TIMER IS UPDATED -> EVERY SECOND ONCE
 
     /* THIS FUNCTION WILL CONVERT SECONDS INTO THE MM:SS FORMAT
@@ -235,6 +235,8 @@ liveGameWatcher.gameTimerUpdate.listen((time) {
 
     print(liveGameWatcher.formatSecondsToMMSS(time));
 });
+
+// START WATCHING FOR THE GAMECLIENT
 
 liveGameWatcher.watch();
 ```

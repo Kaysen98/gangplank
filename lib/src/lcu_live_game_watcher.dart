@@ -76,28 +76,28 @@ class LCULiveGameWatcher {
   
   static const _timeout = Duration(seconds: 3);
 
-  final StreamController _gameFoundStreamController = StreamController.broadcast();
-  final StreamController _gameEndedStreamController = StreamController.broadcast();
-  final StreamController<int> _gameStartedStreamController = StreamController.broadcast();
-  final StreamController<LCULiveGameWatcherSummary?> _gameSummaryUpdateStreamController = StreamController.broadcast();
-  final StreamController<int> _gameTimerUpdateStreamController = StreamController.broadcast();
+  final StreamController _onGameFoundStreamController = StreamController.broadcast();
+  final StreamController _onGameEndedStreamController = StreamController.broadcast();
+  final StreamController<int> _onGameStartedStreamController = StreamController.broadcast();
+  final StreamController<LCULiveGameWatcherSummary?> _onGameSummaryUpdateStreamController = StreamController.broadcast();
+  final StreamController<int> _onGameTimerUpdateStreamController = StreamController.broadcast();
 
-  /// [gameFound] emits one event when an active game was found.
-  Stream get gameFound => _gameFoundStreamController.stream;
+  /// [onGameFound] emits one event when an active game was found.
+  Stream get onGameFound => _onGameFoundStreamController.stream;
 
-  /// [gameEnded] emits one event when an active game has ended.
-  Stream get gameEnded => _gameEndedStreamController.stream;
+  /// [onGameEnded] emits one event when an active game has ended.
+  Stream get onGameEnded => _onGameEndedStreamController.stream;
 
-  /// [gameStarted] emits one event when an active game has started and the summoners can interact with the game.
-  Stream<int> get gameStarted => _gameStartedStreamController.stream;
+  /// [onGameStarted] emits one event when an active game has started and the summoners can interact with the game.
+  Stream<int> get onGameStarted => _onGameStartedStreamController.stream;
 
-  /// [gameSummaryUpdate] emits on the given interval of [LCULiveGameWatcherConfig] and emits a summary of the game data.
-  Stream<LCULiveGameWatcherSummary?> get gameSummaryUpdate => _gameSummaryUpdateStreamController.stream;
+  /// [onGameSummaryUpdate] emits on the given interval of [LCULiveGameWatcherConfig] and emits a summary of the game data.
+  Stream<LCULiveGameWatcherSummary?> get onGameSummaryUpdate => _onGameSummaryUpdateStreamController.stream;
 
-  /// [gameTimerUpdate] emits an event every second after [gameStarted] emitted once.
+  /// [onGameTimerUpdate] emits an event every second after [onGameStarted] emitted once.
   /// This can be used to show a timer in your app.
   /// Use the [formatSecondsToMMSS] method to format from seconds format to MM:SS format.
-  Stream<int> get gameTimerUpdate => _gameTimerUpdateStreamController.stream;
+  Stream<int> get onGameTimerUpdate => _onGameTimerUpdateStreamController.stream;
 
   bool gameInProgress = false;
   bool gameHasStarted = false;
@@ -119,6 +119,17 @@ class LCULiveGameWatcher {
     );
   }
 
+  /// The LCULiveClientWatcher will watch for the League gameclient presence.
+  ///
+  /// If the LCULiveClientWatcher finds an ongoing game the [onGameFound] event will be fired.
+  ///
+  /// If the gameclient is closed and/or terminated the [onGameEnded] event will be fired.
+  /// 
+  /// If the game itself has started the [onGameStarted] event will be fired.
+  /// 
+  /// If there is a summary update the [onGameSummaryUpdate] event will be fired.
+  /// 
+  /// If the game itself has started and the timer is updated the [onGameTimerUpdate] event will be fired.
   void watch() {
     _checkForGamePresence();
 
@@ -129,6 +140,7 @@ class LCULiveGameWatcher {
     if (!_config.disableLogging) _logger.log('WATCHING');
   }
 
+  /// Stop watching the League gameclient.
   void stopWatching() {
     _gamePresenceWatcherTimer?.cancel();
     _gameWatcherTimer?.cancel();
@@ -149,7 +161,7 @@ class LCULiveGameWatcher {
 
         _startGameWatcherInterval();
 
-        _gameFoundStreamController.add(null);
+        _onGameFoundStreamController.add(null);
 
         if (!_config.disableLogging) _logger.log('GAME FOUND');
       }
@@ -162,7 +174,7 @@ class LCULiveGameWatcher {
         _killGameWatcherInterval();
         _killGameTimerUpdateInterval();
         
-        _gameEndedStreamController.add(null);
+        _onGameEndedStreamController.add(null);
 
        if (!_config.disableLogging) _logger.log('GAME ENDED');
       }
@@ -173,7 +185,7 @@ class LCULiveGameWatcher {
     final summary = await getGameSummary();
     
     if (summary != null) {
-      _gameSummaryUpdateStreamController.add(summary);
+      _onGameSummaryUpdateStreamController.add(summary);
 
       if (!gameHasStarted && summary.eventData.firstWhere((e) => e['EventName'] == 'GameStart', orElse: () => null) != null) {
         gameHasStarted = true;
@@ -183,7 +195,7 @@ class LCULiveGameWatcher {
         
         _internalGameTime = gameTime;
 
-        _gameStartedStreamController.add(gameTime);
+        _onGameStartedStreamController.add(gameTime);
 
         _startGameTimerUpdateInterval();
 
@@ -195,7 +207,7 @@ class LCULiveGameWatcher {
       final summary = await getGameSummary();
 
       if (summary != null) {
-        _gameSummaryUpdateStreamController.add(summary);
+        _onGameSummaryUpdateStreamController.add(summary);
 
         if (!gameHasStarted && summary.eventData.firstWhere((e) => e['EventName'] == 'GameStart', orElse: () => null) != null) {
           gameHasStarted = true;
@@ -205,7 +217,7 @@ class LCULiveGameWatcher {
 
           _internalGameTime = gameTime;
 
-          _gameStartedStreamController.add(gameTime);
+          _onGameStartedStreamController.add(gameTime);
 
           _startGameTimerUpdateInterval();
 
@@ -216,7 +228,7 @@ class LCULiveGameWatcher {
   }
 
   void _killGameWatcherInterval() {
-    if(_config.emitNullForGameSummaryUpdateOnGameEnded) _gameSummaryUpdateStreamController.add(null);
+    if(_config.emitNullForGameSummaryUpdateOnGameEnded) _onGameSummaryUpdateStreamController.add(null);
 
     _gameWatcherTimer?.cancel();
   }
@@ -271,7 +283,7 @@ class LCULiveGameWatcher {
   void _startGameTimerUpdateInterval() {
     _gameTimerUpdateTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       _internalGameTime++;
-      _gameTimerUpdateStreamController.add(_internalGameTime);  
+      _onGameTimerUpdateStreamController.add(_internalGameTime);  
     });
   }
 
@@ -279,7 +291,7 @@ class LCULiveGameWatcher {
     _gameTimerUpdateTimer?.cancel();
     _internalGameTime = 0;
     
-    if (_config.emitResettedGameTimerOnGameEnded) _gameTimerUpdateStreamController.add(_internalGameTime);
+    if (_config.emitResettedGameTimerOnGameEnded) _onGameTimerUpdateStreamController.add(_internalGameTime);
   }
 
   String formatSecondsToMMSS(int? time) {
@@ -301,10 +313,10 @@ class LCULiveGameWatcher {
     _gameWatcherTimer?.cancel();
     _gameTimerUpdateTimer?.cancel();
 
-    _gameFoundStreamController.close();
-    _gameEndedStreamController.close();
-    _gameStartedStreamController.close();
-    _gameSummaryUpdateStreamController.close();
-    _gameTimerUpdateStreamController.close();
+    _onGameFoundStreamController.close();
+    _onGameEndedStreamController.close();
+    _onGameStartedStreamController.close();
+    _onGameSummaryUpdateStreamController.close();
+    _onGameTimerUpdateStreamController.close();
   }
 }

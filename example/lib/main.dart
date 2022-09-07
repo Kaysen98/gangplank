@@ -154,28 +154,28 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
       ),
     );
   
-    liveGameWatcher.gameFound.listen((_) {
+    liveGameWatcher.onGameFound.listen((_) {
       // EMITS WHEN AN ONGOING GAME IS FOUND
       setState(() {});
     });
 
-    liveGameWatcher.gameEnded.listen((_) {
+    liveGameWatcher.onGameEnded.listen((_) {
       // EMITS WHEN THE ONGOING GAME ENDS OR IS TERMINATED
       setState(() {});
     });
 
-    liveGameWatcher.gameStarted.listen((gameTime) {
+    liveGameWatcher.onGameStarted.listen((gameTime) {
       // EMITS WHEN THE ONGOING GAME ACTUALLY STARTED WITH THE CURRENT GAMETIME
       setState(() {});
     });
 
-    liveGameWatcher.gameSummaryUpdate.listen((summary) {
+    liveGameWatcher.onGameSummaryUpdate.listen((summary) {
       /* EMITS A GAMESUMMARY OF DATA EXPOSED BY THE GAMECLIENT
       EMITS IN AN INTERVAL YOU CAN CONFIGURE YOURSELF */
       setState(() {});
     });
     
-    liveGameWatcher.gameTimerUpdate.listen((time) {
+    liveGameWatcher.onGameTimerUpdate.listen((time) {
       // EMITS WHEN THE GAME TIMER IS UPDATED -> EVERY SECOND ONCE
 
       /* THIS FUNCTION WILL CONVERT SECONDS INTO THE MM:SS FORMAT
@@ -187,6 +187,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
     });
 
     // START WATCHING THE GAMECLIENT
+    
     liveGameWatcher.watch();
   }
 
