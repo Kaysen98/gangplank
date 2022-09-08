@@ -1,3 +1,7 @@
+## 1.2.2+1
+
+* Updated README.md
+
 ## 1.2.2
 
 * Bugfix: LCUHttpClient does cache properly now
