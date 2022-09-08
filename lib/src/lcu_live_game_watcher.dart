@@ -264,11 +264,13 @@ class LCULiveGameWatcher {
   Future _requestEventData() async {
     Response result = await get(Uri.parse('${_storage.gameClientApi}eventdata')).timeout(_timeout);
 
-    final body = jsonDecode(utf8.decode(result.bodyBytes)) as Map;
+    final body = jsonDecode(utf8.decode(result.bodyBytes));
 
-    if (body.containsKey('Events')) {
-      final eventData = body['Events'] as List;
-      return eventData;
+    if (body is Map) {
+      if (body.containsKey('Events')) {
+        final eventData = body['Events'] as List;
+        return eventData;
+      }
     }
 
     return [];
@@ -277,7 +279,10 @@ class LCULiveGameWatcher {
   Future _requestPlayerList() async {
     Response result = await get(Uri.parse('${_storage.gameClientApi}playerlist')).timeout(_timeout);
     final playerList = jsonDecode(utf8.decode(result.bodyBytes));
-    return playerList;
+
+    if (playerList is List) return playerList;
+
+    return [];
   }
 
   void _startGameTimerUpdateInterval() {

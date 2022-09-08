@@ -154,7 +154,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
         disableLogging: true,
         fetchPlayerList: false,
         gamePresenceCheckerInterval: const Duration(seconds: 5),
-        gameSummaryInterval: const Duration(seconds: 2),
+        //gameSummaryInterval: const Duration(seconds: 2),
         // emitNullForGameSummaryUpdateOnGameEnded: false,
         // emitResettedGameTimerOnGameEnded: false,
       ),
