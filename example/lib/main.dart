@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:gangplank/gangplank.dart';
@@ -61,7 +62,18 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
 
     httpClient = gp.createLCUHttpClient(
       config: LCUHttpClientConfig(
-        getRoutesToCache: ['/lol-summoner/v1/current-summoner'],
+        getRoutesToCache: [
+          LCUGetRouteToCache(
+            route: '/lol-summoner/v1/current',
+            cacheExpiration: const Duration(minutes: 60),
+            matchType: LCUGetRouteToCacheMatchType.contains
+          ),
+          LCUGetRouteToCache(
+            route: '/lol-summoner/v1/summoners',
+            cacheExpiration: const Duration(minutes: 120),
+            matchType: LCUGetRouteToCacheMatchType.startsWith
+          )
+        ],
         cacheExpiration: const Duration(minutes: 20),
       )
     );

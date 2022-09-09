@@ -332,6 +332,11 @@ class LCUSocket {
     }
   }
 
+  /// Unsubscribes all subscriptions
+  void clearSubscriptions() {
+    _subscriptions.clear();
+  }
+
   /// Fire an event manually providing [path] and [manualEventResponse].
   /// 
   /// [ManualEventResponse] has the same implementation as [EventResponse] but you can differentiate a normal from a manual/test event if you check the type.

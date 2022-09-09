@@ -178,11 +178,23 @@ final gp = Gangplank();
 
 // OF COURSE ONLY USABLE AFTER THE WATCHER FIRED THE ONCLIENTSTARTED EVENT
 
-// YOU CAN PASS ENDPOINT ROUTES THAT SHALL BE CACHED
+// YOU CAN PASS ENDPOINT ROUTES THAT SHALL BE CACHED BASED ON WHICH MATCH TYPE AND FOR HOW LONG
+// THE CACHE EXPIRATION IS OPTIONAL, IT WILL DEFAULT TO THE GLOBAL CACHE EXPIRATION THEN
 
 final httpClient = gp.createLCUHttpClient(
     config: LCUHttpClientConfig(
-        getRoutesToCache: ['/lol-summoner/v1/current-summoner'],
+        getRoutesToCache: [
+          LCUGetRouteToCache(
+            route: '/lol-summoner/v1/current',
+            cacheExpiration: const Duration(minutes: 60),
+            matchType: LCUGetRouteToCacheMatchType.contains
+          ),
+          LCUGetRouteToCache(
+            route: '/lol-summoner/v1/summoners',
+            cacheExpiration: const Duration(minutes: 120),
+            matchType: LCUGetRouteToCacheMatchType.startsWith
+          )
+        ],
         cacheExpiration: const Duration(minutes: 20),
     ),
 );

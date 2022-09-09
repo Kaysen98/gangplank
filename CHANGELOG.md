@@ -1,6 +1,10 @@
 ## 1.3.2
 
 * LCUSocket now also includes wildcard matching for in-between the route
+* LCUSocket now includes method to clear all subscriptions
+* LCUHttpClient now includes cache expiration durations for each route
+* LCUHttpClient now includes match type for each route (equals, contains, startsWith, endsWith)
+* LCUHttpClient now includes methods to interact with the cache
 * Updated README.md
 * Updated example
 
