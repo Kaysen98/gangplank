@@ -1,4 +1,4 @@
-## 1.3.2
+## 2.2.2
 
 * LCUSocket now also includes wildcard matching for in-between the route
 * LCUSocket now includes method to clear all subscriptions
