@@ -1,3 +1,11 @@
+## 3.0.0
+
+* LCUHttpClient no longer uses match type and uses wildcard matching instead
+* LCUSocket now uses better wildcard matching
+* Supports multiple wildcards now when matching routes/endpoints
+* Updated README.md
+* Updated example
+
 ## 2.3.2
 
 * Removed cache package and create own cache for LCUHttpClient which is now working bugfree

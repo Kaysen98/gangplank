@@ -123,17 +123,18 @@ socket.subscribe('*', (event) {
 
 socket.subscribe('/lol-lobby/v2/*', (event) {
     // YOU CAN USE WILDCARDS AT THE END OF THE GIVEN PATH
-    // USING WILDCARDS WILL MATCH ALL EVENTS THAT START WITH GIVEN PATH BEFORE THE WILDCARD OPERATOR
 });
 
 socket.subscribe('*/v2/lobby', (event) {
     // YOU CAN USE WILDCARDS AT THE START OF THE GIVEN PATH
-    // USING WILDCARDS WILL MATCH ALL EVENTS THAT END WITH GIVEN PATH BEFORE THE WILDCARD OPERATOR
 });
 
 socket.subscribe('/lol-chat/v1/conversations/*/messages', (event) {
     // YOU CAN USE WILDCARDS IN-BETWEEN THE GIVEN PATH
-    // USING WILDCARDS WILL MATCH ALL EVENTS THAT START AND END WITH GIVEN PATH BETWEEN THE WILDCARD OPERATOR
+});
+
+socket.subscribe('/lol-chat/*/conversations/*/messages', (event) {
+    // YOU CAN USE MULTIPLE WILDCARDS
 });
 
 socket.subscribe('/lol-lobby/v2/lobby', (event) {
@@ -178,22 +179,17 @@ final gp = Gangplank();
 
 // OF COURSE ONLY USABLE AFTER THE WATCHER FIRED THE ONCLIENTSTARTED EVENT
 
-// YOU CAN PASS ENDPOINT ROUTES THAT SHALL BE CACHED BASED ON WHICH MATCH TYPE AND FOR HOW LONG
+// YOU CAN PASS ENDPOINT ROUTES THAT SHALL BE CACHED AND FOR HOW LONG
+// YOU CAN ALSO SUPPLY WILDCARDS FOR MATCHING
 // THE CACHE EXPIRATION IS OPTIONAL, IT WILL DEFAULT TO THE GLOBAL CACHE EXPIRATION THEN
 
 final httpClient = gp.createLCUHttpClient(
     config: LCUHttpClientConfig(
         getRoutesToCache: [
           LCUGetRouteToCache(
-            route: '/lol-summoner/v1/current',
-            cacheExpiration: const Duration(minutes: 60),
-            matchType: LCUGetRouteToCacheMatchType.contains
-          ),
-          LCUGetRouteToCache(
-            route: '/lol-summoner/v1/summoners',
+            route: '/lol-summoner/v1/*',
             cacheExpiration: const Duration(minutes: 120),
-            matchType: LCUGetRouteToCacheMatchType.startsWith
-          )
+          ),
         ],
         cacheExpiration: const Duration(minutes: 20),
     ),
@@ -275,7 +271,7 @@ final liveGameWatcher = gp.createLCULiveGameWatcher(
         disableLogging: true,
         fetchPlayerList: false,
         gamePresenceCheckerInterval: const Duration(seconds: 5),
-        gameSummaryInterval: const Duration(seconds: 2),
+        gameSummaryInterval: const Duration(seconds: 10),
         emitNullForGameSummaryUpdateOnGameEnded: false,
         emitResettedGameTimerOnGameEnded: false,
     ),

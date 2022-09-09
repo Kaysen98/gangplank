@@ -2,21 +2,17 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:gangplank/src/lcu_http_client_cache.dart';
+import 'package:gangplank/src/wildcard.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:gangplank/src/lcu_watcher.dart';
 import 'package:gangplank/src/logging.dart';
 import 'package:gangplank/src/storage.dart';
 
-enum LCUGetRouteToCacheMatchType {
-  equals,
-  contains,
-  startsWith,
-  endsWith,
-}
-
 class LCUGetRouteToCache {
   /// The route that must be cached.
+  /// 
+  /// Supports wildcards (e.g. `/lol-summoner/v1/summoners*` would match `/lol-summoner/v1/summoners?name=test`)
   final String route;
 
   /// The lifetime of this specific object in the cache.
@@ -24,19 +20,14 @@ class LCUGetRouteToCache {
   /// If not set, [cacheExpiration] defaults to the global duration.
   final Duration? cacheExpiration;
 
-  /// The [LCUGetRouteToCacheMatchType] determines on how the route will be matched.
-  final LCUGetRouteToCacheMatchType matchType;
-
   LCUGetRouteToCache({
     required this.route,
     this.cacheExpiration,
-    this.matchType = LCUGetRouteToCacheMatchType.contains,
-  }): assert(route.split('*').length <= 2, 'ONLY ONE WILDCARD IS ALLOWED.');
+  });
 
   Map<String, dynamic> toJson() => {
     'route': route,
     'cacheExpiration': cacheExpiration?.inSeconds,
-    'matchType': matchType.name,
   };
 
   @override
@@ -65,21 +56,9 @@ class LCUHttpClientConfig {
   ///
   /// The application will then grab the data out of cache instead of requesting the data from LCU.
   /// 
-  /// You can decide your on own how the routes shall be cached based on matchType.
-  /// 
-  /// [LCUGetRouteToCacheMatchType.equals] will only cache the route if it the requested route matches 100%.
-  /// If you supply `/lol-summoner/v1/summoners` the requested route `/lol-summoner/v1/summoners?name=test` won't be cached, but `/lol-summoner/v1/summoners` will.
-  /// 
-  /// [LCUGetRouteToCacheMatchType.contains] will only cache the route if it the requested route contains given value.
-  /// If you supply `/lol-summoner/v1/summoners` the requested route `/lol-summoner/v1/summoners?name=test` will be cached as well as `/lol-summoner/v1/summoners`.
-  /// 
-  /// [LCUGetRouteToCacheMatchType.startsWith] will only cache the route if it the requested route starts with given value.
-  /// If you supply `/lol-summoner/v1/` the requested route `/lol-summoner/v1/summoners?name=test` will be cached.
-  /// 
-  /// [LCUGetRouteToCacheMatchType.endsWith] will only cache the route if it the requested route ends with given value.
-  /// If you supply `/v1/summoners` the requested route `/lol-summoner/v1/summoners?name=test` won't be cached, but `/lol-summoner/v1/summoners` will.
-  /// 
-  /// In this case `/lol-summoner/v1/summoners?name=test` e.g. will be cached.
+  /// You can use wildcards in the route parameter. E.g. `/lol-summoner/v1/summoners*` would also match `/lol-summoner/v1/summoners?name=test`.
+  /// You can also use multiple wildcards like this: `/lol-summoner/*/summoners*`.
+  /// If you want an equaliy check, don't use any wildcards.
   final List<LCUGetRouteToCache> getRoutesToCache;
 
   /// The lifetime of an object in the cache.
@@ -114,6 +93,7 @@ class LCUHttpClientException implements Exception {
 class LCUHttpClient {
   late final GangplankLogger _logger;
   late final LCUStorage _storage;
+  late final LCUWildcard _wildcard;
   late final LCUHttpClientCache _cache;
   
   // CONFIG
@@ -122,6 +102,7 @@ class LCUHttpClient {
 
   LCUHttpClient({required LCUStorage storage, LCUHttpClientConfig? config}) {
     _storage = storage;
+    _wildcard = LCUWildcard();
 
     _config = config ?? LCUHttpClientConfig();
 
@@ -156,7 +137,7 @@ class LCUHttpClient {
       params: params,
     );
 
-    final LCUGetRouteToCache? foundEntry = _mustCacheEndpoint(endpoint);
+    LCUGetRouteToCache? foundEntry = _config.getRoutesToCache.firstWhereOrNull((e) => _wildcard.match(endpoint, e.route));
 
     if (foundEntry != null) {
       // ENTRY FOUND!
@@ -356,39 +337,20 @@ class LCUHttpClient {
     }
   }
 
-  /// Checks if [endpoint] must be cached
-  /// 
-  /// Checks by matchtype and returns [LCUGetRouteToCache] if a route matches or returns `null` if it doesn't.
-  LCUGetRouteToCache? _mustCacheEndpoint(String endpoint) {
-    String lcEndpoint = endpoint.toLowerCase();
-
-    for(LCUGetRouteToCache getRouteToCache in _config.getRoutesToCache) {
-      switch(getRouteToCache.matchType) {
-        case LCUGetRouteToCacheMatchType.equals:
-          if (lcEndpoint == getRouteToCache.route.toLowerCase()) return getRouteToCache;
-          return null;
-        case LCUGetRouteToCacheMatchType.contains:
-          if (lcEndpoint.contains(getRouteToCache.route.toLowerCase())) return getRouteToCache;
-          return null;
-        case LCUGetRouteToCacheMatchType.startsWith:
-          if (lcEndpoint.startsWith(getRouteToCache.route.toLowerCase())) return getRouteToCache;
-          return null;
-        case LCUGetRouteToCacheMatchType.endsWith:
-          if (lcEndpoint.endsWith(getRouteToCache.route.toLowerCase())) return getRouteToCache;
-          return null;
-        default:
-          return null;
-      }
-    }
-
-    return null;
-  }
-
   void removeKeyFromCache(String url) {
     _cache.remove(url);
   }
 
   void clearCache() {
     _cache.clear();
+  }
+}
+
+extension IterableExtension<T> on Iterable<T> {
+  T? firstWhereOrNull(bool Function(T element) test) {
+    for (var element in this) {
+      if (test(element)) return element;
+    }
+    return null;
   }
 }

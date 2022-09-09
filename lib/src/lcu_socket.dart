@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:gangplank/src/lcu_watcher.dart';
 import 'package:gangplank/src/logging.dart';
 import 'package:gangplank/src/storage.dart';
+import 'package:gangplank/src/wildcard.dart';
 
 class LCUSocketConfig {
   /// Disables the logging for the [LCUSocket].
@@ -74,6 +75,7 @@ class LcuMessageType {
 class LCUSocket {
   late final GangplankLogger _logger;
   late final LCUStorage _storage;
+  late final LCUWildcard _wildcard;
 
   // CONFIG
 
@@ -98,6 +100,7 @@ class LCUSocket {
 
   LCUSocket({required LCUStorage storage, LCUSocketConfig? config}) {
     _storage = storage;
+    _wildcard = LCUWildcard();
 
     _config = config ?? LCUSocketConfig();
 
@@ -203,45 +206,11 @@ class LCUSocket {
             for (Function callback in _subscriptions[key]!) {
               callback(response);
             }
-          } else if (key.startsWith('*')) {
-            // KEY IS A WILDCARD -> PROCEED IF IT STARTS WITH KEY
+          } else if (_wildcard.match(response.uri, key)) {
+            // PATTERN MATCHED
 
-            if (response.uri.endsWith(key.replaceAll('*', ''))) {
-              // FOUND KEY WITH WILDCARD
-
-              for (Function callback in _subscriptions[key]!) {
-                callback(response);
-              }
-            }
-          } else if (key.endsWith('*')) {
-            // KEY IS A WILDCARD -> PROCEED IF IT STARTS WITH KEY
-
-            if (response.uri.startsWith(key.replaceAll('*', ''))) {
-              // FOUND KEY WITH WILDCARD
-
-              for (Function callback in _subscriptions[key]!) {
-                callback(response);
-              }
-            }
-          }  else if (key.contains('*')) {
-            final splitKey = key.split('*');
-
-            if (response.uri.startsWith(splitKey[0]) && response.uri.endsWith(splitKey[1])) {
-              // FOUND KEY WITH WILDCARD
-
-              for (Function callback in _subscriptions[key]!) {
-                callback(response);
-              }
-            }
-          } else {
-            // IS NO WILDCARD -> PROCEED NORMALLY
-
-            if (key == response.uri) {
-              // FOUND REGISTERED LISTENER IN SUBSCRIPTIONS
-
-              for (Function callback in _subscriptions[key]!) {
-                callback(response);
-              }
+            for (Function callback in _subscriptions[key]!) {
+              callback(response);
             }
           }
         }
@@ -289,9 +258,11 @@ class LCUSocket {
   ///
   /// You can provide a path that matches 100% (e.g. `/lol-summoner/v1/current-summoner`).
   ///
-  /// You can also provide a wildcard (e.g. `*/current-summoner`, `/lol-summoner/*` or `/lol-chat/v1/conversations/*/messages`).
-  /// By providing a wildcard every route you subscribed that matches the wildcard will be called.
-  /// You can only provide one wildcard for each subscription (e.g. `/lol-chat/v1/*/*/messages` is not working).
+  ///
+  /// You can provide wildcards. E.g. `*/current-summoner` and `/lol-summoner/v1/*` would also match `/lol-summoner/v1/current-summoner`.
+  /// You can also use multiple wildcards like this: `/lol-summoner/*/current*`.
+  /// If you want an equaliy check, don't use any wildcards.
+  ///
   ///
   /// This is mostly helpful when you need to listen to any change of any friend in your friendslist (e.g `/lol-game-client-chat/v1/buddies/insert-buddy-name-here`).
   /// Since you dont want to subscribe to each buddy in your friends list, using the route with wildcard makes it very easy (e.g `/lol-game-client-chat/v1/buddies/*`).

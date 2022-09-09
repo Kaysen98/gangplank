@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 
 import 'package:gangplank/gangplank.dart';
@@ -64,15 +63,9 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
       config: LCUHttpClientConfig(
         getRoutesToCache: [
           LCUGetRouteToCache(
-            route: '/lol-summoner/v1/current',
-            cacheExpiration: const Duration(minutes: 60),
-            matchType: LCUGetRouteToCacheMatchType.contains
-          ),
-          LCUGetRouteToCache(
-            route: '/lol-summoner/v1/summoners',
+            route: '/lol-summoner/v1/*',
             cacheExpiration: const Duration(minutes: 120),
-            matchType: LCUGetRouteToCacheMatchType.startsWith
-          )
+          ),
         ],
         cacheExpiration: const Duration(minutes: 20),
       ),
@@ -102,6 +95,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
       // SOCKET CONNECTED
 
       currentGameflowPhase = await httpClient.get('/lol-gameflow/v1/gameflow-phase');
+      await httpClient.get('/lol-summoner/v1/current-summoner');
 
       setState(() {});
     });
