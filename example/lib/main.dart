@@ -124,6 +124,11 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
       setState(() {});
     });
 
+    socket.subscribe('/lol-chat/v1/conversations/*/messages', (event) {
+      events.add(event);
+      setState(() {});
+    });
+
     // SUBSCRIBE FROM A SPECIFIC EVENT LISTENER BY FUNCTION (NO ANONYMOUS FUNCTION)
 
     socket.subscribe('/lol-lobby/v2/lobby', onLobbyEvent);

@@ -131,6 +131,11 @@ socket.subscribe('*/v2/lobby', (event) {
     // USING WILDCARDS WILL MATCH ALL EVENTS THAT END WITH GIVEN PATH BEFORE THE WILDCARD OPERATOR
 });
 
+socket.subscribe('/lol-chat/v1/conversations/*/messages', (event) {
+    // YOU CAN USE WILDCARDS IN-BETWEEN THE GIVEN PATH
+    // USING WILDCARDS WILL MATCH ALL EVENTS THAT START AND END WITH GIVEN PATH BETWEEN THE WILDCARD OPERATOR
+});
+
 socket.subscribe('/lol-lobby/v2/lobby', (event) {
     // YOU CAN ALSO JUST MATCH THE PATH COMPLETELY
 });

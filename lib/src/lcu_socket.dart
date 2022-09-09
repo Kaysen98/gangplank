@@ -223,6 +223,16 @@ class LCUSocket {
                 callback(response);
               }
             }
+          }  else if (key.contains('*')) {
+            final splitKey = key.split('*');
+
+            if (response.uri.startsWith(splitKey[0]) && response.uri.endsWith(splitKey[1])) {
+              // FOUND KEY WITH WILDCARD
+
+              for (Function callback in _subscriptions[key]!) {
+                callback(response);
+              }
+            }
           } else {
             // IS NO WILDCARD -> PROCEED NORMALLY
 
@@ -279,8 +289,9 @@ class LCUSocket {
   ///
   /// You can provide a path that matches 100% (e.g. `/lol-summoner/v1/current-summoner`).
   ///
-  /// You can also provide a wildcard (e.g. `*/current-summoner` or `/lol-summoner/*`).
-  /// By providing a wildcard every route you subscribed to will be called.
+  /// You can also provide a wildcard (e.g. `*/current-summoner`, `/lol-summoner/*` or `/lol-chat/v1/conversations/*/messages`).
+  /// By providing a wildcard every route you subscribed that matches the wildcard will be called.
+  /// You can only provide one wildcard for each subscription (e.g. `/lol-chat/v1/*/*/messages` is not working).
   ///
   /// This is mostly helpful when you need to listen to any change of any friend in your friendslist (e.g `/lol-game-client-chat/v1/buddies/insert-buddy-name-here`).
   /// Since you dont want to subscribe to each buddy in your friends list, using the route with wildcard makes it very easy (e.g `/lol-game-client-chat/v1/buddies/*`).
