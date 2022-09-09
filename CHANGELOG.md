@@ -1,3 +1,7 @@
+## 2.3.2
+
+* Removed cache package and create own cache for LCUHttpClient which is now working bugfree
+
 ## 2.2.2
 
 * LCUSocket now also includes wildcard matching for in-between the route

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter_cache/flutter_cache.dart' as cache;
+import 'package:gangplank/src/lcu_http_client_cache.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:gangplank/src/lcu_watcher.dart';
@@ -114,6 +114,7 @@ class LCUHttpClientException implements Exception {
 class LCUHttpClient {
   late final GangplankLogger _logger;
   late final LCUStorage _storage;
+  late final LCUHttpClientCache _cache;
   
   // CONFIG
 
@@ -129,7 +130,7 @@ class LCUHttpClient {
       storage: _storage,
     );
 
-    cache.clear();
+    _cache = LCUHttpClientCache();
   }
 
   /// Fires a GET request against the League client.
@@ -141,7 +142,7 @@ class LCUHttpClient {
   ///
   /// Returns the requested resources payload either (from cache if route is supplied as an endpoint that should be cached).
   Future get(String endpoint, {Map<String, dynamic>? params}) async {
-    final cachedResult = await cache.load(endpoint);
+    final cachedResult = _cache.get(endpoint);
 
     if (cachedResult != null) {
       if (!_config.disableLogging) _logger.log('RETURNED FROM CACHE: $endpoint');
@@ -162,9 +163,9 @@ class LCUHttpClient {
       // ROUTE SHOULD BE CACHED
       // IF CACHE EXPIRATION SET ON FOUND ENTRY USE IT, OTHERWISE GLOBAL CACHE EXPIRATION
 
-      await cache.write(endpoint, result, foundEntry.cacheExpiration != null ? foundEntry.cacheExpiration!.inSeconds : _config.cacheExpiration.inSeconds);
+      DateTime expiresIn = _cache.set(endpoint, result, foundEntry.cacheExpiration ?? _config.cacheExpiration);
 
-      if (!_config.disableLogging) _logger.log('CACHED: $endpoint FOR ${foundEntry.cacheExpiration != null ? foundEntry.cacheExpiration!.inSeconds : _config.cacheExpiration.inSeconds} SECONDS');
+      if (!_config.disableLogging) _logger.log('CACHED: $endpoint | EXPIRES: ${expiresIn.toIso8601String()}');
     }
 
     return result;
@@ -383,11 +384,11 @@ class LCUHttpClient {
     return null;
   }
 
-  void clearCache() {
-    cache.clear();
+  void removeKeyFromCache(String url) {
+    _cache.remove(url);
   }
 
-  void removeKeyFromCache(String url) {
-    cache.destroy(url);
+  void clearCache() {
+    _cache.clear();
   }
 }

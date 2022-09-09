@@ -75,7 +75,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
           )
         ],
         cacheExpiration: const Duration(minutes: 20),
-      )
+      ),
     );
 
     watcher.onClientStarted.listen((credentials) async {
