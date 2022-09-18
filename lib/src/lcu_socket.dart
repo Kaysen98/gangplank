@@ -45,16 +45,18 @@ extension EventResponseTypeExtension on EventResponseType {
 
 class LCUSocketConfig {
   /// Disables the logging for the [LCUSocket].
-  /// 
+  ///
   /// [disableLogging] defaults to `false`.
   final bool disableLogging;
 
   /// The interval used to try to connect the LCUSocket on failure.
-  /// 
+  ///
   /// [tryConnectInterval] defaults to 5 seconds.
   final Duration tryConnectInterval;
 
-  LCUSocketConfig({ this.disableLogging = false, this.tryConnectInterval = const Duration(seconds: 5)});
+  LCUSocketConfig(
+      {this.disableLogging = false,
+      this.tryConnectInterval = const Duration(seconds: 5)});
 }
 
 class EventResponse {
@@ -131,7 +133,8 @@ class LCUSocket {
   Stream get onDisconnect => _onDisconnectStreamController.stream;
   bool get isConnected => _connected;
   WebSocket? get nativeSocket => _socket;
-  Map<String, List<Function(EventResponse)>> get subscriptions => _subscriptions;
+  Map<String, List<Function(EventResponse)>> get subscriptions =>
+      _subscriptions;
 
   bool _connected = false;
   Timer? _tryConnectInterval;
@@ -237,7 +240,8 @@ class LCUSocket {
 
         EventResponse? response = EventResponse(
           uri: parsedPayload['uri'],
-          eventType: parsedPayload['eventType'].toString().toEventResponseType(),
+          eventType:
+              parsedPayload['eventType'].toString().toEventResponseType(),
           data: parsedPayload['data'],
         );
 
@@ -333,12 +337,12 @@ class LCUSocket {
   }
 
   /// Unsubscribes specific eventlistener by function.
-  /// 
+  ///
   /// To make this work you need to have a named function in the subscribe call instead of an anonymous function.
   void unsubscribeSpecific(Function(EventResponse) function) {
     // REMOVE FROM SUBSCRIPTION MAP
 
-    for(String key in _subscriptions.keys) {
+    for (String key in _subscriptions.keys) {
       if (_subscriptions[key]!.contains(function)) {
         _subscriptions[key]!.removeWhere((e) => e == function);
       }
@@ -351,13 +355,14 @@ class LCUSocket {
   }
 
   /// Fire an event manually providing [path] and [manualEventResponse].
-  /// 
+  ///
   /// [ManualEventResponse] has the same implementation as [EventResponse] but you can differentiate a normal from a manual/test event if you check the type.
-  /// 
+  ///
   /// If you subscribed to `/test` e.g. and you call [fireEvent] with the path `/test` it will raise an event in your subscription handler.
   void fireEvent(String path, ManualEventResponse manualEventResponse) {
     if (_subscriptions.containsKey(path)) {
-      _subscriptions[path]!.forEach((callback) => callback(manualEventResponse));
+      _subscriptions[path]!
+          .forEach((callback) => callback(manualEventResponse));
     }
   }
 

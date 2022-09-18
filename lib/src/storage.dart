@@ -10,7 +10,7 @@ class LCUStorage {
   LCUCredentials? credentials;
   String gameClientApi = 'https://127.0.0.1:2999/liveclientdata/';
 
-  LCUStorage({ this.disableLogging = false }) {
+  LCUStorage({this.disableLogging = false}) {
     readCertificate();
   }
 

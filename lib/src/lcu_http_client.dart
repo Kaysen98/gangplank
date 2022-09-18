@@ -11,12 +11,12 @@ import 'package:gangplank/src/storage.dart';
 
 class LCUGetRouteToCache {
   /// The route that must be cached.
-  /// 
+  ///
   /// Supports wildcards (e.g. `/lol-summoner/v1/summoners*` would match `/lol-summoner/v1/summoners?name=test`)
   final String route;
 
   /// The lifetime of this specific object in the cache.
-  /// 
+  ///
   /// If not set, [cacheExpiration] defaults to the global duration.
   final Duration? cacheExpiration;
 
@@ -26,9 +26,9 @@ class LCUGetRouteToCache {
   });
 
   Map<String, dynamic> toJson() => {
-    'route': route,
-    'cacheExpiration': cacheExpiration?.inSeconds,
-  };
+        'route': route,
+        'cacheExpiration': cacheExpiration?.inSeconds,
+      };
 
   @override
   String toString() {
@@ -38,37 +38,37 @@ class LCUGetRouteToCache {
 
 class LCUHttpClientConfig {
   /// Disables the logging for the [LCUHttpClient].
-  /// 
+  ///
   /// [disableLogging] defaults to false.
   final bool disableLogging;
 
   /// The timeout used on HTTP requests.
-  /// 
+  ///
   /// [requestTimeout] defaults to 8 seconds.
   final Duration requestTimeout;
 
   /// You can supply routes you want to cache.
-  /// 
+  ///
   /// Usecase: Maybe you want to display the current lobby with it's members.
   /// On EVERY lobby update you get summoner data for all members.
   /// This builds up alot of requests to the summoner endpoint.
   /// Since the summoner data won't change frequently you can supply the endpoint route here to cache it.
   ///
   /// The application will then grab the data out of cache instead of requesting the data from LCU.
-  /// 
+  ///
   /// You can use wildcards in the route parameter. E.g. `/lol-summoner/v1/summoners*` would also match `/lol-summoner/v1/summoners?name=test`.
   /// You can also use multiple wildcards like this: `/lol-summoner/*/summoners*`.
   /// If you want an equaliy check, don't use any wildcards.
   final List<LCUGetRouteToCache> getRoutesToCache;
 
   /// The lifetime of an object in the cache.
-  /// 
+  ///
   /// [cacheExpiration] defaults to 30 minutes.
   final Duration cacheExpiration;
 
-  LCUHttpClientConfig({ 
-    this.disableLogging = false, 
-    this.requestTimeout = const Duration(seconds: 8), 
+  LCUHttpClientConfig({
+    this.disableLogging = false,
+    this.requestTimeout = const Duration(seconds: 8),
     this.getRoutesToCache = const [],
     this.cacheExpiration = const Duration(minutes: 30),
   });
@@ -95,7 +95,7 @@ class LCUHttpClient {
   late final LCUStorage _storage;
   late final LCUWildcard _wildcard;
   late final LCUHttpClientCache _cache;
-  
+
   // CONFIG
 
   late final LCUHttpClientConfig _config;
@@ -126,7 +126,8 @@ class LCUHttpClient {
     final cachedResult = _cache.get(endpoint);
 
     if (cachedResult != null) {
-      if (!_config.disableLogging) _logger.log('RETURNED FROM CACHE: $endpoint');
+      if (!_config.disableLogging)
+        _logger.log('RETURNED FROM CACHE: $endpoint');
 
       return cachedResult;
     }
@@ -137,16 +138,20 @@ class LCUHttpClient {
       params: params,
     );
 
-    LCUGetRouteToCache? foundEntry = _config.getRoutesToCache.firstWhereOrNull((e) => _wildcard.match(endpoint, e.route));
+    LCUGetRouteToCache? foundEntry = _config.getRoutesToCache
+        .firstWhereOrNull((e) => _wildcard.match(endpoint, e.route));
 
     if (foundEntry != null) {
       // ENTRY FOUND!
       // ROUTE SHOULD BE CACHED
       // IF CACHE EXPIRATION SET ON FOUND ENTRY USE IT, OTHERWISE GLOBAL CACHE EXPIRATION
 
-      DateTime expiresIn = _cache.set(endpoint, result, foundEntry.cacheExpiration ?? _config.cacheExpiration);
+      DateTime expiresIn = _cache.set(endpoint, result,
+          foundEntry.cacheExpiration ?? _config.cacheExpiration);
 
-      if (!_config.disableLogging) _logger.log('CACHED: $endpoint | EXPIRES: ${expiresIn.toIso8601String()}');
+      if (!_config.disableLogging)
+        _logger
+            .log('CACHED: $endpoint | EXPIRES: ${expiresIn.toIso8601String()}');
     }
 
     return result;
@@ -271,10 +276,14 @@ class LCUHttpClient {
 
       switch (method) {
         case HttpMethod.get:
-          response = await http.get(uri, headers: headers).timeout(_config.requestTimeout);
+          response = await http
+              .get(uri, headers: headers)
+              .timeout(_config.requestTimeout);
           break;
         case HttpMethod.delete:
-          response = await http.delete(uri, headers: headers).timeout(_config.requestTimeout);
+          response = await http
+              .delete(uri, headers: headers)
+              .timeout(_config.requestTimeout);
           break;
         case HttpMethod.post:
           response = await http
@@ -307,7 +316,6 @@ class LCUHttpClient {
           (responseBody['errorCode'] != null ||
               responseBody['httpStatus'] != null ||
               responseBody['message'] != null)) {
-
         throw LCUHttpClientException(
           message: responseBody['message'],
           httpStatus: responseBody['httpStatus'],
@@ -315,16 +323,19 @@ class LCUHttpClient {
         );
       }
 
-      if (!_config.disableLogging) _logger.log('SUCCESSFULLY RECEIVED RESPONSE FROM $url');
+      if (!_config.disableLogging)
+        _logger.log('SUCCESSFULLY RECEIVED RESPONSE FROM $url');
 
       return responseBody;
     } catch (err) {
-      if (!_config.disableLogging) _logger.err('ERROR OCCURED REQUESTING $url', err);
+      if (!_config.disableLogging)
+        _logger.err('ERROR OCCURED REQUESTING $url', err);
 
       if (err is TimeoutException) {
         throw LCUHttpClientException(
           httpStatus: 408,
-          message: 'The request timed out after ${_config.requestTimeout.inSeconds} seconds',
+          message:
+              'The request timed out after ${_config.requestTimeout.inSeconds} seconds',
         );
       }
 

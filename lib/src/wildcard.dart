@@ -31,14 +31,14 @@ class LCUWildcard {
 
       if (target.endsWith(splitMatchStr[splitMatchStr.length - 1])) {
         // ENDPOINT ENDS WITH THE LAST OCCURRENCE IN ARRAY -> DO NOTHING
-      }  else {
+      } else {
         // ENDPOINT DOES NOT END WITH THE LAST OCCURRENCE IN ARRAY
 
         return false;
       }
     }
 
-    for(String part in splitMatchStr) {
+    for (String part in splitMatchStr) {
       int indexOfMatch = target.indexOf(part);
 
       if (indexOfMatch == -1) {
@@ -47,7 +47,8 @@ class LCUWildcard {
         return false;
       }
 
-      target = target.replaceRange(indexOfMatch, indexOfMatch + part.length, '');
+      target =
+          target.replaceRange(indexOfMatch, indexOfMatch + part.length, '');
     }
 
     return true;

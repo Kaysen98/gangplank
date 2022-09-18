@@ -1,3 +1,7 @@
+## 3.3.0
+
+* Gangplank now also exposes extension methods on the LCUSocket's eventType property to parse it from enum to string and vice versa
+
 ## 3.2.0
 
 * LCUSocket's events now include the eventType (create, update, delete)

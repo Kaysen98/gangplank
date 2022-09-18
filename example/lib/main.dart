@@ -52,10 +52,9 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
     gp = Gangplank();
 
     watcher = gp.createLCUWatcher(
-      config: LCUWatcherConfig(
-        disableLogging: true,
-      )
-    );
+        config: LCUWatcherConfig(
+      disableLogging: true,
+    ));
 
     socket = gp.createLCUSocket();
 
@@ -94,7 +93,8 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
     socket.onConnect.listen((_) async {
       // SOCKET CONNECTED
 
-      currentGameflowPhase = await httpClient.get('/lol-gameflow/v1/gameflow-phase');
+      currentGameflowPhase =
+          await httpClient.get('/lol-gameflow/v1/gameflow-phase');
       await httpClient.get('/lol-summoner/v1/current-summoner');
 
       setState(() {});
@@ -142,24 +142,22 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
     // FIRE AN EVENT MANUALLY TO TEST AND MOCK EVENT LISTENERS
 
     socket.fireEvent(
-        '/lol-lobby/v2/lobby', 
-        ManualEventResponse(
-            uri: '/lol-lobby/v2/lobby', 
-            data: { 'mockedData': true }
-        ),
+      '/lol-lobby/v2/lobby',
+      ManualEventResponse(
+          uri: '/lol-lobby/v2/lobby', data: {'mockedData': true}),
     );
 
     // UPPER WILL RESULT THIS EVENT LISTENER TO FIRE AND EMIT THE DATA GIVEN ABOVE
 
     socket.subscribe('/lol-lobby/v2/lobby', (event) {
-        // EVENT.uri = '/lol-lobby/v2/lobby';
-        // EVENT.data = {'mockedData': true };
+      // EVENT.uri = '/lol-lobby/v2/lobby';
+      // EVENT.data = {'mockedData': true };
     });
 
     // UNSUBSCRIBE FROM A SPECIFIC EVENT LISTENER BY FUNCTION (NO ANONYMOUS FUNCTION)
 
     socket.unsubscribeSpecific(onLobbyEvent);
-    
+
     liveGameWatcher = gp.createLCULiveGameWatcher(
       config: LCULiveGameWatcherConfig(
         disableLogging: false,
@@ -171,7 +169,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
         // emitResettedGameTimerOnGameEnded: false,
       ),
     );
-  
+
     liveGameWatcher.onGameFound.listen((_) {
       // EMITS WHEN AN ONGOING GAME IS FOUND
       setState(() {});
@@ -192,7 +190,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
       EMITS IN AN INTERVAL YOU CAN CONFIGURE YOURSELF */
       setState(() {});
     });
-    
+
     liveGameWatcher.onGameTimerUpdate.listen((time) {
       // EMITS WHEN THE GAME TIMER IS UPDATED -> EVERY SECOND ONCE
 
@@ -242,7 +240,9 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                           height: 10,
                         ),
                         Text(
-                          _credentials == null ? 'Not found yet.' : _credentials.toString(),
+                          _credentials == null
+                              ? 'Not found yet.'
+                              : _credentials.toString(),
                         ),
                       ],
                     ))),
@@ -262,7 +262,9 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                       ),
                       ListTile(
                         leading: _buildStatusDot(true),
-                        title: Text(currentGameflowPhase != null ? 'Gameflowphase: $currentGameflowPhase' : 'Gameflowphase: No gameflow found yet.'),
+                        title: Text(currentGameflowPhase != null
+                            ? 'Gameflowphase: $currentGameflowPhase'
+                            : 'Gameflowphase: No gameflow found yet.'),
                         dense: true,
                       ),
                       ListTile(
@@ -280,22 +282,26 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                         dense: true,
                       ),
                       ListTile(
-                        leading: _buildStatusDot(liveGameWatcher.gameInProgress),
+                        leading:
+                            _buildStatusDot(liveGameWatcher.gameInProgress),
                         title: Text(liveGameWatcher.gameInProgress
                             ? 'Player is currently ingame'
                             : 'Player is currently not ingame'),
                         dense: true,
                       ),
                       ListTile(
-                        leading: _buildStatusDot(liveGameWatcher.gameHasStarted),
+                        leading:
+                            _buildStatusDot(liveGameWatcher.gameHasStarted),
                         title: Text(liveGameWatcher.gameHasStarted
                             ? 'The active game has started'
                             : 'If active, has not yet started'),
                         dense: true,
                       ),
                       ListTile(
-                        leading: _buildStatusDot(liveGameWatcher.gameHasStarted),
-                        title: Text(liveGameWatcher.formatSecondsToMMSS(currentLiveGameTime)),
+                        leading:
+                            _buildStatusDot(liveGameWatcher.gameHasStarted),
+                        title: Text(liveGameWatcher
+                            .formatSecondsToMMSS(currentLiveGameTime)),
                         dense: true,
                       ),
                     ],
@@ -310,8 +316,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
               alignment: WrapAlignment.center,
               children: [
                 ElevatedButton(
-                    onPressed: watcher.clientIsRunning &&
-                            socket.isConnected
+                    onPressed: watcher.clientIsRunning && socket.isConnected
                         ? () async {
                             try {
                               await httpClient.post('/lol-lobby/v2/lobby',
@@ -325,8 +330,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                       'CREATE FLEX LOBBY',
                     )),
                 ElevatedButton(
-                    onPressed: watcher.clientIsRunning &&
-                            socket.isConnected
+                    onPressed: watcher.clientIsRunning && socket.isConnected
                         ? () async {
                             try {
                               await httpClient.post('/lol-lobby/v2/lobby',

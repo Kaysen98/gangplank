@@ -4,58 +4,58 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as p;
 
 bool match(String target, String query) {
-    if (!query.contains('*')) {
-      // QUERY DOES NOT CONTAIN WILDCARDS -> EQUALS CHECK
+  if (!query.contains('*')) {
+    // QUERY DOES NOT CONTAIN WILDCARDS -> EQUALS CHECK
 
-      return target == query;
-    }
-
-    // SPLIT QUERY BY WILDCARDS
-
-    final splitMatchStr = query.split('*');
-
-    // REMOVE WILDCARDS IN THE BEGINNING AND END
-
-    splitMatchStr.removeWhere((part) => part.isEmpty);
-
-    if (!query.startsWith('*')) {
-      // DOES NOT START WITH WILDCARD -> EXECUTE STARTS WITH
-
-      if (target.startsWith(splitMatchStr[0])) {
-        // ENDPOINT STARTS WITH THE FIRST OCCURRENCE IN ARRAY -> DO NOTHING
-      } else {
-        // ENDPOINT DOES NOT START WITH THE FIRST OCCURENCE IN ARRAY
-
-        return false;
-      }
-    }
-
-    if (!query.endsWith('*')) {
-      // DOES NOT END WITH WILDCARD -> EXECUTE ENDS WITH
-
-      if (target.endsWith(splitMatchStr[splitMatchStr.length - 1])) {
-        // ENDPOINT ENDS WITH THE LAST OCCURRENCE IN ARRAY -> DO NOTHING
-      }  else {
-        // ENDPOINT DOES NOT END WITH THE LAST OCCURRENCE IN ARRAY
-
-        return false;
-      }
-    }
-
-    for(String part in splitMatchStr) {
-      int indexOfMatch = target.indexOf(part);
-
-      if (indexOfMatch == -1) {
-        // PART COULD NOT BE FOUND IN TARGET
-
-        return false;
-      }
-
-      target = target.replaceRange(indexOfMatch, indexOfMatch + part.length, '');
-    }
-
-    return true;
+    return target == query;
   }
+
+  // SPLIT QUERY BY WILDCARDS
+
+  final splitMatchStr = query.split('*');
+
+  // REMOVE WILDCARDS IN THE BEGINNING AND END
+
+  splitMatchStr.removeWhere((part) => part.isEmpty);
+
+  if (!query.startsWith('*')) {
+    // DOES NOT START WITH WILDCARD -> EXECUTE STARTS WITH
+
+    if (target.startsWith(splitMatchStr[0])) {
+      // ENDPOINT STARTS WITH THE FIRST OCCURRENCE IN ARRAY -> DO NOTHING
+    } else {
+      // ENDPOINT DOES NOT START WITH THE FIRST OCCURENCE IN ARRAY
+
+      return false;
+    }
+  }
+
+  if (!query.endsWith('*')) {
+    // DOES NOT END WITH WILDCARD -> EXECUTE ENDS WITH
+
+    if (target.endsWith(splitMatchStr[splitMatchStr.length - 1])) {
+      // ENDPOINT ENDS WITH THE LAST OCCURRENCE IN ARRAY -> DO NOTHING
+    } else {
+      // ENDPOINT DOES NOT END WITH THE LAST OCCURRENCE IN ARRAY
+
+      return false;
+    }
+  }
+
+  for (String part in splitMatchStr) {
+    int indexOfMatch = target.indexOf(part);
+
+    if (indexOfMatch == -1) {
+      // PART COULD NOT BE FOUND IN TARGET
+
+      return false;
+    }
+
+    target = target.replaceRange(indexOfMatch, indexOfMatch + part.length, '');
+  }
+
+  return true;
+}
 
 void main() {
   test('MacOs', () async {
@@ -469,17 +469,20 @@ _cmiodalassistants 31658   0.0  0.1 408230608   4272   ??  S    10:04PM   0:00.1
   test('WC', () {
     // String endpoint = '/lol-game-client-chat/v1/buddies/UrOgger';
     // String query = '/*/buddies/*';
-    String endpoint = '/lol-chat/v1/conversations/asbjfbdaskjjbjjsakj%40sec.eu1.pvp.net/messages/12341';
+    String endpoint =
+        '/lol-chat/v1/conversations/asbjfbdaskjjbjjsakj%40sec.eu1.pvp.net/messages/12341';
     String query = '/lol-chat/v1/conversations/*/messages/*';
 
     Map<String, String> map = {};
-    map['/lol-chat/v1/conversations/asbjfbdaskjjbjjsakj%40sec.eu1.pvp.net/messages/12341'] = '/lol-chat/v1/conversations/*/messages/*';
-    map['/lol-game-client-chat/v1/buddies/UrOgger'] = '/lol-game-client-chat/v1/*';
+    map['/lol-chat/v1/conversations/asbjfbdaskjjbjjsakj%40sec.eu1.pvp.net/messages/12341'] =
+        '/lol-chat/v1/conversations/*/messages/*';
+    map['/lol-game-client-chat/v1/buddies/UrOgger'] =
+        '/lol-game-client-chat/v1/*';
     // map[''] = '';
     // map[''] = '';
     // map[''] = '';
 
-    for(String key in map.keys) {
+    for (String key in map.keys) {
       print('MATCH: ${match(key, map[key]!)}');
     }
   });
@@ -496,7 +499,7 @@ _cmiodalassistants 31658   0.0  0.1 408230608   4272   ??  S    10:04PM   0:00.1
     final endsWithoutWildcard = !matchStr.endsWith('*');
 
     splitMatchStr.removeWhere((e) => e.isEmpty);
-    
+
     print(splitMatchStr);
 
     String endpointToProcess = endpoint;
@@ -518,7 +521,7 @@ _cmiodalassistants 31658   0.0  0.1 408230608   4272   ??  S    10:04PM   0:00.1
     }
 
     if (!matched) {
-      for(String part in splitMatchStr) {
+      for (String part in splitMatchStr) {
         int indexOfMatch = endpointToProcess.indexOf(part);
 
         if (indexOfMatch == -1) {
@@ -526,7 +529,8 @@ _cmiodalassistants 31658   0.0  0.1 408230608   4272   ??  S    10:04PM   0:00.1
           break;
         }
 
-        endpointToProcess = endpointToProcess.replaceRange(indexOfMatch, indexOfMatch + part.length, '');
+        endpointToProcess = endpointToProcess.replaceRange(
+            indexOfMatch, indexOfMatch + part.length, '');
 
         print(endpointToProcess);
       }
@@ -536,7 +540,9 @@ _cmiodalassistants 31658   0.0  0.1 408230608   4272   ??  S    10:04PM   0:00.1
   });
 
   test('LCU-GAME-WATCHER', () async {
-    final result = await Process.run("WMIC PROCESS WHERE name='League of Legends.exe' GET commandline", [], runInShell: true);
+    final result = await Process.run(
+        "WMIC PROCESS WHERE name='League of Legends.exe' GET commandline", [],
+        runInShell: true);
 
     final _regexWin = RegExp(r'-RiotClientPort=(.*?)"');
     final match = _regexWin.firstMatch(result.stdout);
