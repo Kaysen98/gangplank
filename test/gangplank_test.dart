@@ -445,17 +445,12 @@ _cmiodalassistants 31658   0.0  0.1 408230608   4272   ??  S    10:04PM   0:00.1
     //   ["aux", "-o", "args | grep 'LeagueClientUx'"]
     // );
 
-    final _regexMAC = RegExp(r'--install-directory=(.*?)( --|\n|$)');
+    // final _regexMAC = RegExp(r'--install-directory=(.*?)( --|\n|$)');
+    final _regexMAC = RegExp(r'-RiotClientPort=(.*?)( -|\n|$)');
     final match = _regexMAC.firstMatch(fromCmd);
     final matchedText = match?.group(1);
 
-    File lockfile = File(p.join(matchedText!, 'lockfile'));
-
-    if (await lockfile.exists()) {
-      print(await lockfile.readAsString());
-    }
-
-    print(lockfile.path);
+    print(matchedText);
   });
 
   test('Win', () {
@@ -538,5 +533,16 @@ _cmiodalassistants 31658   0.0  0.1 408230608   4272   ??  S    10:04PM   0:00.1
     }
 
     print('MATCHED: $matched');
+  });
+
+  test('LCU-GAME-WATCHER', () async {
+    final result = await Process.run("WMIC PROCESS WHERE name='League of Legends.exe' GET commandline", [], runInShell: true);
+
+    final _regexWin = RegExp(r'-RiotClientPort=(.*?)"');
+    final match = _regexWin.firstMatch(result.stdout);
+    final matchedText = match?.group(1);
+
+    print(result.stdout.toString().trim().length);
+    print(matchedText);
   });
 }

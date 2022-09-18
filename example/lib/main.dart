@@ -162,8 +162,9 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
     
     liveGameWatcher = gp.createLCULiveGameWatcher(
       config: LCULiveGameWatcherConfig(
-        disableLogging: true,
+        disableLogging: false,
         fetchPlayerList: false,
+        gamePresenceCheckStrategy: GamePresenceCheckStrategy.process,
         gamePresenceCheckerInterval: const Duration(seconds: 5),
         //gameSummaryInterval: const Duration(seconds: 2),
         // emitNullForGameSummaryUpdateOnGameEnded: false,

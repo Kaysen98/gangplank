@@ -1,3 +1,10 @@
+## 3.1.0
+
+* LCULiveGameWatcher now uses a different strategy to check for the game's presence
+* LCULiveGameWatcher now offers two different strategies to check for the game's presence
+* Updated README.md
+* Updated example
+
 ## 3.0.0
 
 * LCUHttpClient no longer uses match type and uses wildcard matching instead

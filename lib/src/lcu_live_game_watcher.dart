@@ -1,9 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:gangplank/src/logging.dart';
 import 'package:gangplank/src/storage.dart';
 import 'package:http/http.dart';
+
+enum GamePresenceCheckStrategy {
+  process,
+  http
+}
 
 class LCULiveGameWatcherConfig {
   /// Disables the logging for the [LCULiveGameWatcher].
@@ -20,6 +26,18 @@ class LCULiveGameWatcherConfig {
   /// 
   /// [gameSummaryInterval] defaults to 5 seconds.
   final Duration gameSummaryInterval;
+
+  /// The [GamePresenceCheckStrategy] used to check for the gameclient's presence.
+  /// 
+  /// The HTTP strategy will force the watcher to do a HTTP request to check for game presence.
+  /// If the request fails it will be catched, indicating the game is not present at the moment.
+  /// 
+  /// The process strategy will force the watcher to check via process (cmd) to check for game presence.
+  /// 
+  /// It's encouraged to use `GamePresenceCheckStrategy.process` over `GamePresenceCheckStrategy.http`.
+  /// 
+  /// [GamePresenceCheckStrategy] defaults to `GamePresenceCheckStrategy.process`.
+  final GamePresenceCheckStrategy gamePresenceCheckStrategy;
 
   /// Whether to fetch the playerlist and put it into the summary.
   /// 
@@ -42,10 +60,13 @@ class LCULiveGameWatcherConfig {
     this.disableLogging = false,
     this.gamePresenceCheckerInterval = const Duration(seconds: 10),
     this.gameSummaryInterval = const Duration(seconds: 5),
+    this.gamePresenceCheckStrategy = GamePresenceCheckStrategy.process,
     this.fetchPlayerList = true,
     this.emitNullForGameSummaryUpdateOnGameEnded = true,
     this.emitResettedGameTimerOnGameEnded = true,
-  });
+  }) :
+  assert(gamePresenceCheckerInterval.inSeconds >= 1, 'THE GAME PRESENCE CHECKER INTERVAL MUST BE ONE SECOND OR GREATER'),
+  assert(gameSummaryInterval.inSeconds >= 1, 'THE GAME SUMMARY INTERVAL MUST BE ONE SECOND OR GREATER');
 }
 
 class LCULiveGameWatcherSummary {
@@ -73,6 +94,13 @@ class LCULiveGameWatcher {
   // CONFIG
 
   late final LCULiveGameWatcherConfig _config;
+
+  static const _commandWin = "WMIC PROCESS WHERE name='League of Legends.exe' GET commandline";
+  final _regexWin = RegExp(r'-RiotClientPort=(.*?)"');
+
+  static const _commandMAC = 'ps';
+  static const _commandArgsMAC = ["aux", "-o", "args | grep 'League of Legends'"];
+  final _regexMAC = RegExp(r'-RiotClientPort=(.*?)( -|\n|$)');
   
   static const _timeout = Duration(seconds: 3);
 
@@ -117,6 +145,8 @@ class LCULiveGameWatcher {
       service: 'LCU-LIVE-GAME-WATCHER',
       storage: _storage,
     );
+
+    if (!_config.disableLogging) _logger.log('USING ${_config.gamePresenceCheckStrategy == GamePresenceCheckStrategy.process ? 'PROCESS' : 'HTTP'} STRATEGY');
   }
 
   /// The LCULiveClientWatcher will watch for the League gameclient presence.
@@ -152,10 +182,39 @@ class LCULiveGameWatcher {
     if (!_config.disableLogging) _logger.log('STOPPED WATCHING');
   }
 
-  Future _checkForGamePresence() async {
-    try {
-      await get(Uri.parse('${_storage.gameClientApi}gamestats')).timeout(_timeout);
+  Future<bool> _isGamePresent() async {
+    if (_config.gamePresenceCheckStrategy == GamePresenceCheckStrategy.process) {
+      if (Platform.isWindows) {
+        final result = await Process.run(
+          _commandWin,
+          [],
+          runInShell: true,
+        );
 
+        final match = _regexWin.firstMatch(result.stdout);
+        final matchedText = match?.group(1);
+
+        return matchedText != null;
+      } else if (Platform.isMacOS) {
+        final result = await Process.run(_commandMAC, _commandArgsMAC);
+
+        final match = _regexMAC.firstMatch(result.stdout);
+        final matchedText = match?.group(1);
+
+        return matchedText != null;
+      }
+    } else if (_config.gamePresenceCheckStrategy == GamePresenceCheckStrategy.http) {
+      try {
+        await get(Uri.parse('${_storage.gameClientApi}gamestats')).timeout(_timeout);
+        return true;
+      } catch (err) {}
+    }
+
+    return false;
+  }
+
+  Future _checkForGamePresence() async {
+    if (await _isGamePresent()) {
       if (!gameInProgress) {
         gameInProgress = true;
 
@@ -165,7 +224,7 @@ class LCULiveGameWatcher {
 
         if (!_config.disableLogging) _logger.log('GAME FOUND');
       }
-    } catch (err) {
+    } else {
       if (gameInProgress) {
         gameInProgress = false;
         gameHasStarted = false;

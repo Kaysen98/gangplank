@@ -17,7 +17,10 @@ class LCUWatcherConfig {
   /// [processCheckerInterval] defaults to 5 seconds.
   final Duration processCheckerInterval;
 
-  LCUWatcherConfig({ this.disableLogging = false, this.processCheckerInterval = const Duration(seconds: 5)});
+  LCUWatcherConfig({
+    this.disableLogging = false,
+    this.processCheckerInterval = const Duration(seconds: 5)
+  }) : assert(processCheckerInterval.inSeconds >= 1, 'THE PROCESS CHECKER INTERVAL MUST BE ONE SECOND OR GREATER');
 }
 
 class LCUCredentials {
@@ -58,10 +61,11 @@ class LCUWatcher {
 
   late final LCUWatcherConfig _config;
 
-  static const _commandWin =
-      "WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline";
+  static const _commandWin = "WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline";
   final _regexWin = RegExp(r'--install-directory=(.*?)"');
 
+  static const _commandMAC = 'ps';
+  static const _commandArgsMAC = ["aux", "-o", "args | grep 'LeagueClientUx'"];
   final _regexMAC = RegExp(r'--install-directory=(.*?)( --|\n|$)');
 
   bool _clientIsRunning = false;
@@ -203,8 +207,7 @@ class LCUWatcher {
 
       return matchedText;
     } else if (Platform.isMacOS) {
-      final result = await Process.run(
-          'ps', ["aux", "-o", "args | grep 'LeagueClientUx'"]);
+      final result = await Process.run(_commandMAC, _commandArgsMAC);
 
       final match = _regexMAC.firstMatch(result.stdout);
       final matchedText = match?.group(1);
