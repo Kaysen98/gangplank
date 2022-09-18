@@ -1,3 +1,7 @@
+## 3.2.0
+
+* LCUSocket's events now include the eventType (create, update, delete)
+
 ## 3.1.0
 
 * LCULiveGameWatcher now uses a different strategy to check for the game's presence

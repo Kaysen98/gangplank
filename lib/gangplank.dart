@@ -7,7 +7,7 @@ import 'package:gangplank/src/lcu_watcher.dart';
 import 'package:gangplank/src/storage.dart';
 
 export './src/lcu_watcher.dart' show LCUWatcher, LCUWatcherConfig, LCUCredentials;
-export './src/lcu_socket.dart' show LCUSocket, LCUSocketConfig, EventResponse, ManualEventResponse;
+export './src/lcu_socket.dart' show LCUSocket, LCUSocketConfig, EventResponse, ManualEventResponse, EventResponseType;
 export './src/lcu_http_client.dart' show LCUHttpClient, LCUHttpClientConfig, LCUHttpClientException, LCUGetRouteToCache;
 export './src/lcu_live_game_watcher.dart' show LCULiveGameWatcher, LCULiveGameWatcherConfig, LCULiveGameWatcherSummary, GamePresenceCheckStrategy;
 

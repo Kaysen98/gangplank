@@ -7,6 +7,42 @@ import 'package:gangplank/src/logging.dart';
 import 'package:gangplank/src/storage.dart';
 import 'package:gangplank/src/wildcard.dart';
 
+enum EventResponseType {
+  create,
+  update,
+  delete,
+}
+
+extension EventResponseTypeParser on String {
+  EventResponseType toEventResponseType() {
+    switch (toLowerCase()) {
+      case 'create':
+        return EventResponseType.create;
+      case 'update':
+        return EventResponseType.update;
+      case 'delete':
+        return EventResponseType.delete;
+      default:
+        return EventResponseType.update;
+    }
+  }
+}
+
+extension EventResponseTypeExtension on EventResponseType {
+  String get asString {
+    switch (this) {
+      case EventResponseType.create:
+        return 'create';
+      case EventResponseType.update:
+        return 'update';
+      case EventResponseType.delete:
+        return 'delete';
+      default:
+        return 'update';
+    }
+  }
+}
+
 class LCUSocketConfig {
   /// Disables the logging for the [LCUSocket].
   /// 
@@ -23,20 +59,24 @@ class LCUSocketConfig {
 
 class EventResponse {
   final String uri;
+  final EventResponseType eventType;
   final dynamic data;
 
   EventResponse({
     required this.uri,
+    this.eventType = EventResponseType.update,
     this.data,
   });
 
   Map<String, dynamic> toJson() => {
         'uri': uri,
+        'eventType': eventType.asString,
         'data': data,
       };
 
   Map<String, dynamic> toJsonWithoutData() => {
         'uri': uri,
+        'eventType': eventType.asString,
       };
 
   Map<String, dynamic> toJsonOnlyData() => {
@@ -56,6 +96,7 @@ class EventResponse {
 class ManualEventResponse extends EventResponse {
   ManualEventResponse({
     required super.uri,
+    super.eventType,
     super.data,
   });
 }
@@ -196,6 +237,7 @@ class LCUSocket {
 
         EventResponse? response = EventResponse(
           uri: parsedPayload['uri'],
+          eventType: parsedPayload['eventType'].toString().toEventResponseType(),
           data: parsedPayload['data'],
         );
 
