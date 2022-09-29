@@ -59,8 +59,7 @@ bool match(String target, String query) {
 
 void main() {
   test('MacOs', () async {
-    final fromCmd =
-        """USER               PID  %CPU %MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND          ARGS
+    final fromCmd = """USER               PID  %CPU %MEM      VSZ    RSS   TT  STAT STARTED      TIME COMMAND          ARGS
 mohamedali       32657 108.2  2.0 408792240 170032   ??  R    10:17PM   0:00.73 /Users/mohamedal /Users/mohamedali/FlutterDev/flutter/bin/cache/dart-sdk/bin/dart /Users/mohamedali/Projects/Test/tests/lib/tests.dart
 _coreaudiod        179  14.4  0.3 409090656  21296   ??  Ss   11:20PM  66:10.77 /usr/sbin/coreau /usr/sbin/coreaudiod
 _windowserver      157  10.4  0.6 410068096  52432   ??  Ss   11:20PM 110:28.18 /System/Library/ /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer -daemon
@@ -469,15 +468,12 @@ _cmiodalassistants 31658   0.0  0.1 408230608   4272   ??  S    10:04PM   0:00.1
   test('WC', () {
     // String endpoint = '/lol-game-client-chat/v1/buddies/UrOgger';
     // String query = '/*/buddies/*';
-    String endpoint =
-        '/lol-chat/v1/conversations/asbjfbdaskjjbjjsakj%40sec.eu1.pvp.net/messages/12341';
+    String endpoint = '/lol-chat/v1/conversations/asbjfbdaskjjbjjsakj%40sec.eu1.pvp.net/messages/12341';
     String query = '/lol-chat/v1/conversations/*/messages/*';
 
     Map<String, String> map = {};
-    map['/lol-chat/v1/conversations/asbjfbdaskjjbjjsakj%40sec.eu1.pvp.net/messages/12341'] =
-        '/lol-chat/v1/conversations/*/messages/*';
-    map['/lol-game-client-chat/v1/buddies/UrOgger'] =
-        '/lol-game-client-chat/v1/*';
+    map['/lol-chat/v1/conversations/asbjfbdaskjjbjjsakj%40sec.eu1.pvp.net/messages/12341'] = '/lol-chat/v1/conversations/*/messages/*';
+    map['/lol-game-client-chat/v1/buddies/UrOgger'] = '/lol-game-client-chat/v1/*';
     // map[''] = '';
     // map[''] = '';
     // map[''] = '';
@@ -529,8 +525,7 @@ _cmiodalassistants 31658   0.0  0.1 408230608   4272   ??  S    10:04PM   0:00.1
           break;
         }
 
-        endpointToProcess = endpointToProcess.replaceRange(
-            indexOfMatch, indexOfMatch + part.length, '');
+        endpointToProcess = endpointToProcess.replaceRange(indexOfMatch, indexOfMatch + part.length, '');
 
         print(endpointToProcess);
       }
@@ -540,9 +535,7 @@ _cmiodalassistants 31658   0.0  0.1 408230608   4272   ??  S    10:04PM   0:00.1
   });
 
   test('LCU-GAME-WATCHER', () async {
-    final result = await Process.run(
-        "WMIC PROCESS WHERE name='League of Legends.exe' GET commandline", [],
-        runInShell: true);
+    final result = await Process.run("WMIC PROCESS WHERE name='League of Legends.exe' GET commandline", [], runInShell: true);
 
     final _regexWin = RegExp(r'-RiotClientPort=(.*?)"');
     final match = _regexWin.firstMatch(result.stdout);

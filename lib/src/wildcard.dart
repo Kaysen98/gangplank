@@ -47,8 +47,7 @@ class LCUWildcard {
         return false;
       }
 
-      target =
-          target.replaceRange(indexOfMatch, indexOfMatch + part.length, '');
+      target = target.replaceRange(indexOfMatch, indexOfMatch + part.length, '');
     }
 
     return true;

@@ -17,11 +17,7 @@ class LCUWatcherConfig {
   /// [processCheckerInterval] defaults to 5 seconds.
   final Duration processCheckerInterval;
 
-  LCUWatcherConfig(
-      {this.disableLogging = false,
-      this.processCheckerInterval = const Duration(seconds: 5)})
-      : assert(processCheckerInterval.inSeconds >= 1,
-            'THE PROCESS CHECKER INTERVAL MUST BE ONE SECOND OR GREATER');
+  LCUWatcherConfig({this.disableLogging = false, this.processCheckerInterval = const Duration(seconds: 5)}) : assert(processCheckerInterval.inSeconds >= 1, 'THE PROCESS CHECKER INTERVAL MUST BE ONE SECOND OR GREATER');
 }
 
 class LCUCredentials {
@@ -62,8 +58,7 @@ class LCUWatcher {
 
   late final LCUWatcherConfig _config;
 
-  static const _commandWin =
-      "WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline";
+  static const _commandWin = "WMIC PROCESS WHERE name='LeagueClientUx.exe' GET commandline";
   final _regexWin = RegExp(r'--install-directory=(.*?)"');
 
   static const _commandMAC = 'ps';
@@ -72,13 +67,10 @@ class LCUWatcher {
 
   bool _clientIsRunning = false;
 
-  final StreamController<LCUCredentials> _onClientStartedStreamController =
-      StreamController.broadcast();
-  final StreamController<void> _onClientClosedStreamController =
-      StreamController.broadcast();
+  final StreamController<LCUCredentials> _onClientStartedStreamController = StreamController.broadcast();
+  final StreamController<void> _onClientClosedStreamController = StreamController.broadcast();
 
-  Stream<LCUCredentials> get onClientStarted =>
-      _onClientStartedStreamController.stream;
+  Stream<LCUCredentials> get onClientStarted => _onClientStartedStreamController.stream;
   Stream<void> get onClientClosed => _onClientClosedStreamController.stream;
   bool get clientIsRunning => _clientIsRunning;
 
@@ -129,8 +121,7 @@ class LCUWatcher {
     if (!clientIsRunning) {
       // LOCK FILE WAS NOT FOUND, START INTERVALL TO CHECK FOR PROCESS
 
-      _timerProcessWatcher =
-          Timer.periodic(_config.processCheckerInterval, (_) {
+      _timerProcessWatcher = Timer.periodic(_config.processCheckerInterval, (_) {
         _searchLockfilePath();
       });
     }
@@ -155,8 +146,7 @@ class LCUWatcher {
           _storage.credentials = null;
           _lockfileWatcher!.cancel();
 
-          if (!_config.disableLogging)
-            _logger.log('CLIENT CLOSED! LOCKFILE DELETED');
+          if (!_config.disableLogging) _logger.log('CLIENT CLOSED! LOCKFILE DELETED');
 
           _checkForProcess();
         }
@@ -190,10 +180,8 @@ class LCUWatcher {
         _clientIsRunning = true;
         _onClientStartedStreamController.add(_storage.credentials!);
 
-        if (!_config.disableLogging)
-          _logger.log('CLIENT STARTED! PROCESS FOUND');
-        if (!_config.disableLogging)
-          _logger.log(_storage.credentials.toString());
+        if (!_config.disableLogging) _logger.log('CLIENT STARTED! PROCESS FOUND');
+        if (!_config.disableLogging) _logger.log(_storage.credentials.toString());
 
         _initFileWatcher();
       }

@@ -6,36 +6,15 @@ import 'package:gangplank/src/lcu_socket.dart';
 import 'package:gangplank/src/lcu_watcher.dart';
 import 'package:gangplank/src/storage.dart';
 
-export './src/lcu_watcher.dart'
-    show LCUWatcher, LCUWatcherConfig, LCUCredentials;
-export './src/lcu_socket.dart'
-    show
-        LCUSocket,
-        LCUSocketConfig,
-        EventResponse,
-        ManualEventResponse,
-        EventResponseType,
-        EventResponseTypeExtension,
-        EventResponseTypeParser;
-export './src/lcu_http_client.dart'
-    show
-        LCUHttpClient,
-        LCUHttpClientConfig,
-        LCUHttpClientException,
-        LCUGetRouteToCache;
-export './src/lcu_live_game_watcher.dart'
-    show
-        LCULiveGameWatcher,
-        LCULiveGameWatcherConfig,
-        LCULiveGameWatcherSummary,
-        GamePresenceCheckStrategy;
+export './src/lcu_watcher.dart' show LCUWatcher, LCUWatcherConfig, LCUCredentials;
+export './src/lcu_socket.dart' show LCUSocket, LCUSocketConfig, EventResponse, ManualEventResponse, EventResponseType, EventResponseTypeExtension, EventResponseTypeParser;
+export './src/lcu_http_client.dart' show LCUHttpClient, LCUHttpClientConfig, LCUHttpClientException, LCUGetRouteToCache;
+export './src/lcu_live_game_watcher.dart' show LCULiveGameWatcher, LCULiveGameWatcherConfig, LCULiveGameWatcherSummary, GamePresenceCheckStrategy;
 
 class GangplankHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
+    return super.createHttpClient(context)..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
   }
 }
 
@@ -94,8 +73,7 @@ class Gangplank {
   ///
   /// Only call this method once and reuse the instance.
   LCUHttpClient createLCUHttpClient({LCUHttpClientConfig? config}) {
-    assert(
-        _httpClient == null, 'ONLY INSTANTIATE ONE INSTANCE OF LCUHTTPCLIENT');
+    assert(_httpClient == null, 'ONLY INSTANTIATE ONE INSTANCE OF LCUHTTPCLIENT');
 
     _httpClient = LCUHttpClient(
       storage: _storage,
@@ -112,10 +90,8 @@ class Gangplank {
   /// Only call this method once and reuse the instance.
   ///
   /// The [LCULiveGameWatcher] works independently so you can call the watch function at any point.
-  LCULiveGameWatcher createLCULiveGameWatcher(
-      {LCULiveGameWatcherConfig? config}) {
-    assert(_liveGameWatcher == null,
-        'ONLY INSTANTIATE ONE INSTANCE OF LCULIVEGAMEWATCHER');
+  LCULiveGameWatcher createLCULiveGameWatcher({LCULiveGameWatcherConfig? config}) {
+    assert(_liveGameWatcher == null, 'ONLY INSTANTIATE ONE INSTANCE OF LCULIVEGAMEWATCHER');
 
     _liveGameWatcher = LCULiveGameWatcher(
       storage: _storage,

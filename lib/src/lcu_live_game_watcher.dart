@@ -61,20 +61,15 @@ class LCULiveGameWatcherConfig {
     this.fetchPlayerList = true,
     this.emitNullForGameSummaryUpdateOnGameEnded = true,
     this.emitResettedGameTimerOnGameEnded = true,
-  })  : assert(gamePresenceCheckerInterval.inSeconds >= 1,
-            'THE GAME PRESENCE CHECKER INTERVAL MUST BE ONE SECOND OR GREATER'),
-        assert(gameSummaryInterval.inSeconds >= 1,
-            'THE GAME SUMMARY INTERVAL MUST BE ONE SECOND OR GREATER');
+  })  : assert(gamePresenceCheckerInterval.inSeconds >= 1, 'THE GAME PRESENCE CHECKER INTERVAL MUST BE ONE SECOND OR GREATER'),
+        assert(gameSummaryInterval.inSeconds >= 1, 'THE GAME SUMMARY INTERVAL MUST BE ONE SECOND OR GREATER');
 }
 
 class LCULiveGameWatcherSummary {
   dynamic gameStats;
   List<dynamic> eventData, playerList;
 
-  LCULiveGameWatcherSummary(
-      {required this.gameStats,
-      required this.eventData,
-      required this.playerList});
+  LCULiveGameWatcherSummary({required this.gameStats, required this.eventData, required this.playerList});
 
   Map<String, dynamic> toJson() => {
         'gameStats': gameStats,
@@ -96,30 +91,20 @@ class LCULiveGameWatcher {
 
   late final LCULiveGameWatcherConfig _config;
 
-  static const _commandWin =
-      "WMIC PROCESS WHERE name='League of Legends.exe' GET commandline";
+  static const _commandWin = "WMIC PROCESS WHERE name='League of Legends.exe' GET commandline";
   final _regexWin = RegExp(r'-RiotClientPort=(.*?)"');
 
   static const _commandMAC = 'ps';
-  static const _commandArgsMAC = [
-    "aux",
-    "-o",
-    "args | grep 'League of Legends'"
-  ];
+  static const _commandArgsMAC = ["aux", "-o", "args | grep 'League of Legends'"];
   final _regexMAC = RegExp(r'-RiotClientPort=(.*?)( -|\n|$)');
 
   static const _timeout = Duration(seconds: 3);
 
-  final StreamController _onGameFoundStreamController =
-      StreamController.broadcast();
-  final StreamController _onGameEndedStreamController =
-      StreamController.broadcast();
-  final StreamController<int> _onGameStartedStreamController =
-      StreamController.broadcast();
-  final StreamController<LCULiveGameWatcherSummary?>
-      _onGameSummaryUpdateStreamController = StreamController.broadcast();
-  final StreamController<int> _onGameTimerUpdateStreamController =
-      StreamController.broadcast();
+  final StreamController _onGameFoundStreamController = StreamController.broadcast();
+  final StreamController _onGameEndedStreamController = StreamController.broadcast();
+  final StreamController<int> _onGameStartedStreamController = StreamController.broadcast();
+  final StreamController<LCULiveGameWatcherSummary?> _onGameSummaryUpdateStreamController = StreamController.broadcast();
+  final StreamController<int> _onGameTimerUpdateStreamController = StreamController.broadcast();
 
   /// [onGameFound] emits one event when an active game was found.
   Stream get onGameFound => _onGameFoundStreamController.stream;
@@ -131,14 +116,12 @@ class LCULiveGameWatcher {
   Stream<int> get onGameStarted => _onGameStartedStreamController.stream;
 
   /// [onGameSummaryUpdate] emits on the given interval of [LCULiveGameWatcherConfig] and emits a summary of the game data.
-  Stream<LCULiveGameWatcherSummary?> get onGameSummaryUpdate =>
-      _onGameSummaryUpdateStreamController.stream;
+  Stream<LCULiveGameWatcherSummary?> get onGameSummaryUpdate => _onGameSummaryUpdateStreamController.stream;
 
   /// [onGameTimerUpdate] emits an event every second after [onGameStarted] emitted once.
   /// This can be used to show a timer in your app.
   /// Use the [formatSecondsToMMSS] method to format from seconds format to MM:SS format.
-  Stream<int> get onGameTimerUpdate =>
-      _onGameTimerUpdateStreamController.stream;
+  Stream<int> get onGameTimerUpdate => _onGameTimerUpdateStreamController.stream;
 
   bool gameInProgress = false;
   bool gameHasStarted = false;
@@ -149,8 +132,7 @@ class LCULiveGameWatcher {
 
   int _internalGameTime = 0;
 
-  LCULiveGameWatcher(
-      {required LCUStorage storage, LCULiveGameWatcherConfig? config}) {
+  LCULiveGameWatcher({required LCUStorage storage, LCULiveGameWatcherConfig? config}) {
     _storage = storage;
 
     _config = config ?? LCULiveGameWatcherConfig();
@@ -160,9 +142,7 @@ class LCULiveGameWatcher {
       storage: _storage,
     );
 
-    if (!_config.disableLogging)
-      _logger.log(
-          'USING ${_config.gamePresenceCheckStrategy == GamePresenceCheckStrategy.process ? 'PROCESS' : 'HTTP'} STRATEGY');
+    if (!_config.disableLogging) _logger.log('USING ${_config.gamePresenceCheckStrategy == GamePresenceCheckStrategy.process ? 'PROCESS' : 'HTTP'} STRATEGY');
   }
 
   /// The LCULiveClientWatcher will watch for the League gameclient presence.
@@ -179,8 +159,7 @@ class LCULiveGameWatcher {
   void watch() {
     _checkForGamePresence();
 
-    _gamePresenceWatcherTimer =
-        Timer.periodic(_config.gamePresenceCheckerInterval, (timer) async {
+    _gamePresenceWatcherTimer = Timer.periodic(_config.gamePresenceCheckerInterval, (timer) async {
       await _checkForGamePresence();
     });
 
@@ -200,8 +179,7 @@ class LCULiveGameWatcher {
   }
 
   Future<bool> _isGamePresent() async {
-    if (_config.gamePresenceCheckStrategy ==
-        GamePresenceCheckStrategy.process) {
+    if (_config.gamePresenceCheckStrategy == GamePresenceCheckStrategy.process) {
       if (Platform.isWindows) {
         final result = await Process.run(
           _commandWin,
@@ -221,11 +199,9 @@ class LCULiveGameWatcher {
 
         return matchedText != null;
       }
-    } else if (_config.gamePresenceCheckStrategy ==
-        GamePresenceCheckStrategy.http) {
+    } else if (_config.gamePresenceCheckStrategy == GamePresenceCheckStrategy.http) {
       try {
-        await get(Uri.parse('${_storage.gameClientApi}gamestats'))
-            .timeout(_timeout);
+        await get(Uri.parse('${_storage.gameClientApi}gamestats')).timeout(_timeout);
         return true;
       } catch (err) {}
     }
@@ -266,10 +242,7 @@ class LCULiveGameWatcher {
     if (summary != null) {
       _onGameSummaryUpdateStreamController.add(summary);
 
-      if (!gameHasStarted &&
-          summary.eventData.firstWhere((e) => e['EventName'] == 'GameStart',
-                  orElse: () => null) !=
-              null) {
+      if (!gameHasStarted && summary.eventData.firstWhere((e) => e['EventName'] == 'GameStart', orElse: () => null) != null) {
         gameHasStarted = true;
 
         double gt = summary.gameStats['gameTime'];
@@ -291,10 +264,7 @@ class LCULiveGameWatcher {
       if (summary != null) {
         _onGameSummaryUpdateStreamController.add(summary);
 
-        if (!gameHasStarted &&
-            summary.eventData.firstWhere((e) => e['EventName'] == 'GameStart',
-                    orElse: () => null) !=
-                null) {
+        if (!gameHasStarted && summary.eventData.firstWhere((e) => e['EventName'] == 'GameStart', orElse: () => null) != null) {
           gameHasStarted = true;
 
           double gt = summary.gameStats['gameTime'];
@@ -313,8 +283,7 @@ class LCULiveGameWatcher {
   }
 
   void _killGameWatcherInterval() {
-    if (_config.emitNullForGameSummaryUpdateOnGameEnded)
-      _onGameSummaryUpdateStreamController.add(null);
+    if (_config.emitNullForGameSummaryUpdateOnGameEnded) _onGameSummaryUpdateStreamController.add(null);
 
     _gameWatcherTimer?.cancel();
   }
@@ -323,8 +292,7 @@ class LCULiveGameWatcher {
     try {
       final futures = [_requestGameStats(), _requestEventData()];
 
-      futures.add(
-          _config.fetchPlayerList ? _requestPlayerList() : Future.value([]));
+      futures.add(_config.fetchPlayerList ? _requestPlayerList() : Future.value([]));
 
       final result = await Future.wait(futures);
 
@@ -336,23 +304,20 @@ class LCULiveGameWatcher {
 
       return summary;
     } catch (err) {
-      if (!_config.disableLogging)
-        _logger.err('NOT ABLE TO RETRIEVE GAME SUMMARY', err);
+      if (!_config.disableLogging) _logger.err('NOT ABLE TO RETRIEVE GAME SUMMARY', err);
     }
 
     return null;
   }
 
   Future _requestGameStats() async {
-    Response result = await get(Uri.parse('${_storage.gameClientApi}gamestats'))
-        .timeout(_timeout);
+    Response result = await get(Uri.parse('${_storage.gameClientApi}gamestats')).timeout(_timeout);
     final stats = jsonDecode(utf8.decode(result.bodyBytes));
     return stats;
   }
 
   Future _requestEventData() async {
-    Response result = await get(Uri.parse('${_storage.gameClientApi}eventdata'))
-        .timeout(_timeout);
+    Response result = await get(Uri.parse('${_storage.gameClientApi}eventdata')).timeout(_timeout);
 
     final body = jsonDecode(utf8.decode(result.bodyBytes));
 
@@ -367,9 +332,7 @@ class LCULiveGameWatcher {
   }
 
   Future _requestPlayerList() async {
-    Response result =
-        await get(Uri.parse('${_storage.gameClientApi}playerlist'))
-            .timeout(_timeout);
+    Response result = await get(Uri.parse('${_storage.gameClientApi}playerlist')).timeout(_timeout);
     final playerList = jsonDecode(utf8.decode(result.bodyBytes));
 
     if (playerList is List) return playerList;
@@ -388,8 +351,7 @@ class LCULiveGameWatcher {
     _gameTimerUpdateTimer?.cancel();
     _internalGameTime = 0;
 
-    if (_config.emitResettedGameTimerOnGameEnded)
-      _onGameTimerUpdateStreamController.add(_internalGameTime);
+    if (_config.emitResettedGameTimerOnGameEnded) _onGameTimerUpdateStreamController.add(_internalGameTime);
   }
 
   String formatSecondsToMMSS(int? time) {

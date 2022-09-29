@@ -81,8 +81,7 @@ class LCUHttpClientException implements Exception {
   int httpStatus;
   String? errorCode;
 
-  LCUHttpClientException(
-      {required this.message, required this.httpStatus, this.errorCode});
+  LCUHttpClientException({required this.message, required this.httpStatus, this.errorCode});
 
   @override
   String toString() {
@@ -126,8 +125,7 @@ class LCUHttpClient {
     final cachedResult = _cache.get(endpoint);
 
     if (cachedResult != null) {
-      if (!_config.disableLogging)
-        _logger.log('RETURNED FROM CACHE: $endpoint');
+      if (!_config.disableLogging) _logger.log('RETURNED FROM CACHE: $endpoint');
 
       return cachedResult;
     }
@@ -138,20 +136,16 @@ class LCUHttpClient {
       params: params,
     );
 
-    LCUGetRouteToCache? foundEntry = _config.getRoutesToCache
-        .firstWhereOrNull((e) => _wildcard.match(endpoint, e.route));
+    LCUGetRouteToCache? foundEntry = _config.getRoutesToCache.firstWhereOrNull((e) => _wildcard.match(endpoint, e.route));
 
     if (foundEntry != null) {
       // ENTRY FOUND!
       // ROUTE SHOULD BE CACHED
       // IF CACHE EXPIRATION SET ON FOUND ENTRY USE IT, OTHERWISE GLOBAL CACHE EXPIRATION
 
-      DateTime expiresIn = _cache.set(endpoint, result,
-          foundEntry.cacheExpiration ?? _config.cacheExpiration);
+      DateTime expiresIn = _cache.set(endpoint, result, foundEntry.cacheExpiration ?? _config.cacheExpiration);
 
-      if (!_config.disableLogging)
-        _logger
-            .log('CACHED: $endpoint | EXPIRES: ${expiresIn.toIso8601String()}');
+      if (!_config.disableLogging) _logger.log('CACHED: $endpoint | EXPIRES: ${expiresIn.toIso8601String()}');
     }
 
     return result;
@@ -189,8 +183,7 @@ class LCUHttpClient {
   /// You can call `toString()` on the exception to print the whole exception.
   ///
   /// Returns the requested resources payload.
-  Future post(String endpoint,
-      {dynamic body, Map<String, dynamic>? params}) async {
+  Future post(String endpoint, {dynamic body, Map<String, dynamic>? params}) async {
     return await _request(
       endpoint,
       HttpMethod.post,
@@ -211,8 +204,7 @@ class LCUHttpClient {
   /// You can call `toString()` on the exception to print the whole exception.
   ///
   /// Returns the requested resources payload.
-  Future patch(String endpoint,
-      {dynamic body, Map<String, dynamic>? params}) async {
+  Future patch(String endpoint, {dynamic body, Map<String, dynamic>? params}) async {
     return await _request(
       endpoint,
       HttpMethod.patch,
@@ -233,8 +225,7 @@ class LCUHttpClient {
   /// You can call `toString()` on the exception to print the whole exception.
   ///
   /// Returns the requested resources payload.
-  Future put(String endpoint,
-      {dynamic body, Map<String, dynamic>? params}) async {
+  Future put(String endpoint, {dynamic body, Map<String, dynamic>? params}) async {
     return await _request(
       endpoint,
       HttpMethod.put,
@@ -243,10 +234,8 @@ class LCUHttpClient {
     );
   }
 
-  Future _request(String endpoint, HttpMethod method,
-      {dynamic body, Map<String, dynamic>? params}) async {
-    assert(_storage.credentials != null,
-        'LCU-CREDENTIALS NOT FOUND IN STORAGE. YOU MUST WAIT FOR THE LCU-WATCHER TO CONNECT BEFORE DOING HTTP REQUESTS.');
+  Future _request(String endpoint, HttpMethod method, {dynamic body, Map<String, dynamic>? params}) async {
+    assert(_storage.credentials != null, 'LCU-CREDENTIALS NOT FOUND IN STORAGE. YOU MUST WAIT FOR THE LCU-WATCHER TO CONNECT BEFORE DOING HTTP REQUESTS.');
 
     String? url;
 
@@ -254,15 +243,10 @@ class LCUHttpClient {
       LCUCredentials credentials = _storage.credentials!;
 
       url = 'https://${credentials.host}:${credentials.port}$endpoint';
-      var bytes =
-          utf8.encode('${credentials.username}:${credentials.password}');
+      var bytes = utf8.encode('${credentials.username}:${credentials.password}');
       var base64Str = base64.encode(bytes);
 
-      Map<String, String> headers = {
-        'Accept': 'application/json',
-        'Authorization': 'Basic $base64Str',
-        'Content-Type': 'application/json'
-      };
+      Map<String, String> headers = {'Accept': 'application/json', 'Authorization': 'Basic $base64Str', 'Content-Type': 'application/json'};
 
       if (params != null) {
         // ADD PARAMS TO URL
@@ -276,46 +260,26 @@ class LCUHttpClient {
 
       switch (method) {
         case HttpMethod.get:
-          response = await http
-              .get(uri, headers: headers)
-              .timeout(_config.requestTimeout);
+          response = await http.get(uri, headers: headers).timeout(_config.requestTimeout);
           break;
         case HttpMethod.delete:
-          response = await http
-              .delete(uri, headers: headers)
-              .timeout(_config.requestTimeout);
+          response = await http.delete(uri, headers: headers).timeout(_config.requestTimeout);
           break;
         case HttpMethod.post:
-          response = await http
-              .post(uri,
-                  headers: headers,
-                  body: body != null ? jsonEncode(body) : null)
-              .timeout(_config.requestTimeout);
+          response = await http.post(uri, headers: headers, body: body != null ? jsonEncode(body) : null).timeout(_config.requestTimeout);
           break;
         case HttpMethod.patch:
-          response = await http
-              .patch(uri,
-                  headers: headers,
-                  body: body != null ? jsonEncode(body) : null)
-              .timeout(_config.requestTimeout);
+          response = await http.patch(uri, headers: headers, body: body != null ? jsonEncode(body) : null).timeout(_config.requestTimeout);
           break;
         case HttpMethod.put:
-          response = await http
-              .put(uri,
-                  headers: headers,
-                  body: body != null ? jsonEncode(body) : null)
-              .timeout(_config.requestTimeout);
+          response = await http.put(uri, headers: headers, body: body != null ? jsonEncode(body) : null).timeout(_config.requestTimeout);
           break;
       }
 
       final responseBodyRaw = utf8.decode(response.bodyBytes);
-      final responseBody =
-          jsonDecode(responseBodyRaw.isEmpty ? '{}' : responseBodyRaw);
+      final responseBody = jsonDecode(responseBodyRaw.isEmpty ? '{}' : responseBodyRaw);
 
-      if (responseBody is Map &&
-          (responseBody['errorCode'] != null ||
-              responseBody['httpStatus'] != null ||
-              responseBody['message'] != null)) {
+      if (responseBody is Map && (responseBody['errorCode'] != null || responseBody['httpStatus'] != null || responseBody['message'] != null)) {
         throw LCUHttpClientException(
           message: responseBody['message'],
           httpStatus: responseBody['httpStatus'],
@@ -323,19 +287,16 @@ class LCUHttpClient {
         );
       }
 
-      if (!_config.disableLogging)
-        _logger.log('SUCCESSFULLY RECEIVED RESPONSE FROM $url');
+      if (!_config.disableLogging) _logger.log('SUCCESSFULLY RECEIVED RESPONSE FROM $url');
 
       return responseBody;
     } catch (err) {
-      if (!_config.disableLogging)
-        _logger.err('ERROR OCCURED REQUESTING $url', err);
+      if (!_config.disableLogging) _logger.err('ERROR OCCURED REQUESTING $url', err);
 
       if (err is TimeoutException) {
         throw LCUHttpClientException(
           httpStatus: 408,
-          message:
-              'The request timed out after ${_config.requestTimeout.inSeconds} seconds',
+          message: 'The request timed out after ${_config.requestTimeout.inSeconds} seconds',
         );
       }
 

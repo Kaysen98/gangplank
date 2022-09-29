@@ -17,8 +17,7 @@ class LCUStorage {
   Future<void> readCertificate() async {
     if (securityContext != null) return;
 
-    String cert =
-        await rootBundle.loadString('packages/gangplank/assets/riotgames.pem');
+    String cert = await rootBundle.loadString('packages/gangplank/assets/riotgames.pem');
     securityContext = SecurityContext();
     securityContext!.setTrustedCertificatesBytes(utf8.encode(cert));
   }

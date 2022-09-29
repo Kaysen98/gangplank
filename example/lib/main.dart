@@ -56,7 +56,13 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
       disableLogging: true,
     ));
 
-    socket = gp.createLCUSocket();
+    socket = gp.createLCUSocket(
+      config: LCUSocketConfig(
+        debounceDuration: const Duration(
+          milliseconds: 500,
+        ),
+      ),
+    );
 
     httpClient = gp.createLCUHttpClient(
       config: LCUHttpClientConfig(
@@ -93,8 +99,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
     socket.onConnect.listen((_) async {
       // SOCKET CONNECTED
 
-      currentGameflowPhase =
-          await httpClient.get('/lol-gameflow/v1/gameflow-phase');
+      currentGameflowPhase = await httpClient.get('/lol-gameflow/v1/gameflow-phase');
       await httpClient.get('/lol-summoner/v1/current-summoner');
 
       setState(() {});
@@ -113,6 +118,16 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
 
     /* SUBSCRIBE TO EVENTS -> REMEMBER! ONLY SUBSCRIBE ONCE EVEN WHEN THE SOCKET CLOSES/RECONNECTS
     THE SUBSCRIPTIONS ALWAYS STAY!*/
+
+    // socket.subscribe('*', (event) {
+    //   events.add(event);
+    //   setState(() {});
+    // });
+
+    socket.subscribe('/lol-champ-select/v1/session', (event) {
+      events.add(event);
+      setState(() {});
+    });
 
     socket.subscribe('/lol-lobby/v2/lobby', (event) {
       events.add(event);
@@ -143,8 +158,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
 
     socket.fireEvent(
       '/lol-lobby/v2/lobby',
-      ManualEventResponse(
-          uri: '/lol-lobby/v2/lobby', data: {'mockedData': true}),
+      ManualEventResponse(uri: '/lol-lobby/v2/lobby', data: {'mockedData': true}),
     );
 
     // UPPER WILL RESULT THIS EVENT LISTENER TO FIRE AND EMIT THE DATA GIVEN ABOVE
@@ -240,9 +254,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                           height: 10,
                         ),
                         Text(
-                          _credentials == null
-                              ? 'Not found yet.'
-                              : _credentials.toString(),
+                          _credentials == null ? 'Not found yet.' : _credentials.toString(),
                         ),
                       ],
                     ))),
@@ -262,46 +274,32 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                       ),
                       ListTile(
                         leading: _buildStatusDot(true),
-                        title: Text(currentGameflowPhase != null
-                            ? 'Gameflowphase: $currentGameflowPhase'
-                            : 'Gameflowphase: No gameflow found yet.'),
+                        title: Text(currentGameflowPhase != null ? 'Gameflowphase: $currentGameflowPhase' : 'Gameflowphase: No gameflow found yet.'),
                         dense: true,
                       ),
                       ListTile(
                         leading: _buildStatusDot(watcher.clientIsRunning),
-                        title: Text(watcher.clientIsRunning
-                            ? 'LCU is running'
-                            : 'LCU is not running'),
+                        title: Text(watcher.clientIsRunning ? 'LCU is running' : 'LCU is not running'),
                         dense: true,
                       ),
                       ListTile(
                         leading: _buildStatusDot(socket.isConnected),
-                        title: Text(socket.isConnected
-                            ? 'LCU-Socket is connected'
-                            : 'LCU-Socket is not connected'),
+                        title: Text(socket.isConnected ? 'LCU-Socket is connected' : 'LCU-Socket is not connected'),
                         dense: true,
                       ),
                       ListTile(
-                        leading:
-                            _buildStatusDot(liveGameWatcher.gameInProgress),
-                        title: Text(liveGameWatcher.gameInProgress
-                            ? 'Player is currently ingame'
-                            : 'Player is currently not ingame'),
+                        leading: _buildStatusDot(liveGameWatcher.gameInProgress),
+                        title: Text(liveGameWatcher.gameInProgress ? 'Player is currently ingame' : 'Player is currently not ingame'),
                         dense: true,
                       ),
                       ListTile(
-                        leading:
-                            _buildStatusDot(liveGameWatcher.gameHasStarted),
-                        title: Text(liveGameWatcher.gameHasStarted
-                            ? 'The active game has started'
-                            : 'If active, has not yet started'),
+                        leading: _buildStatusDot(liveGameWatcher.gameHasStarted),
+                        title: Text(liveGameWatcher.gameHasStarted ? 'The active game has started' : 'If active, has not yet started'),
                         dense: true,
                       ),
                       ListTile(
-                        leading:
-                            _buildStatusDot(liveGameWatcher.gameHasStarted),
-                        title: Text(liveGameWatcher
-                            .formatSecondsToMMSS(currentLiveGameTime)),
+                        leading: _buildStatusDot(liveGameWatcher.gameHasStarted),
+                        title: Text(liveGameWatcher.formatSecondsToMMSS(currentLiveGameTime)),
                         dense: true,
                       ),
                     ],
@@ -319,8 +317,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                     onPressed: watcher.clientIsRunning && socket.isConnected
                         ? () async {
                             try {
-                              await httpClient.post('/lol-lobby/v2/lobby',
-                                  body: {'queueId': 440});
+                              await httpClient.post('/lol-lobby/v2/lobby', body: {'queueId': 440});
                             } catch (err) {
                               print(err.toString());
                             }
@@ -333,8 +330,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                     onPressed: watcher.clientIsRunning && socket.isConnected
                         ? () async {
                             try {
-                              await httpClient.post('/lol-lobby/v2/lobby',
-                                  body: {'queueId': 420});
+                              await httpClient.post('/lol-lobby/v2/lobby', body: {'queueId': 420});
                             } catch (err) {
                               print(err.toString());
                             }
@@ -344,9 +340,7 @@ class _GangplankExamplePageState extends State<GangplankExamplePage> {
                       'CREATE SOLO/DUO LOBBY',
                     )),
                 ElevatedButton(
-                    onPressed: watcher.clientIsRunning &&
-                            socket.isConnected &&
-                            currentGameflowPhase == 'Lobby'
+                    onPressed: watcher.clientIsRunning && socket.isConnected && currentGameflowPhase == 'Lobby'
                         ? () async {
                             try {
                               await httpClient.delete('/lol-lobby/v2/lobby');

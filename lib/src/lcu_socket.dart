@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:gangplank/src/lcu_socket_debouncer.dart';
 import 'package:gangplank/src/lcu_watcher.dart';
 import 'package:gangplank/src/logging.dart';
 import 'package:gangplank/src/storage.dart';
@@ -49,14 +50,31 @@ class LCUSocketConfig {
   /// [disableLogging] defaults to `false`.
   final bool disableLogging;
 
+  /// Disables the logging for the [LCUSocket] debouncer.
+  ///
+  /// [disableLoggingDebouncer] defaults to `false`.
+  final bool disableLoggingDebouncer;
+
   /// The interval used to try to connect the LCUSocket on failure.
   ///
   /// [tryConnectInterval] defaults to 5 seconds.
   final Duration tryConnectInterval;
 
-  LCUSocketConfig(
-      {this.disableLogging = false,
-      this.tryConnectInterval = const Duration(seconds: 5)});
+  /// The duration used to debounce events identified by uri/endpoint.
+  ///
+  /// The LCU tends to send events multiple times in a very fast manner. The debouncer "waits" for the given duration and only emits the last event.
+  /// If you receive an event for the endpoint `/lol-lobby/v2/lobby` e.g. the LCU will most probably send 1-4 events and the debouncer will sort out all events but the last one.
+  /// You will receive the newest event then.
+  ///
+  /// A time span of 500 milliseconds is most balanced and will filter out duplicate events just fine.
+  ///
+  /// NOTE: By debouncing events you cannot trust the [EventResponseType] of emitted events, since only the newest event is going to be emitted.
+  /// Which means if you delete a lobby and create it again in the same time period as [debounceDuration], the delete event will be skipped.
+  ///
+  /// [debounceDuration] defaults to null, which means no debouncer is used.
+  final Duration? debounceDuration;
+
+  LCUSocketConfig({this.disableLogging = false, this.disableLoggingDebouncer = false, this.tryConnectInterval = const Duration(seconds: 5), this.debounceDuration});
 }
 
 class EventResponse {
@@ -119,22 +137,20 @@ class LCUSocket {
   late final GangplankLogger _logger;
   late final LCUStorage _storage;
   late final LCUWildcard _wildcard;
+  late final LCUSocketDebouncer _debouncer;
 
   // CONFIG
 
   late final LCUSocketConfig _config;
 
-  final StreamController _onConnectStreamController =
-      StreamController.broadcast();
-  final StreamController _onDisconnectStreamController =
-      StreamController.broadcast();
+  final StreamController _onConnectStreamController = StreamController.broadcast();
+  final StreamController _onDisconnectStreamController = StreamController.broadcast();
 
   Stream get onConnect => _onConnectStreamController.stream;
   Stream get onDisconnect => _onDisconnectStreamController.stream;
   bool get isConnected => _connected;
   WebSocket? get nativeSocket => _socket;
-  Map<String, List<Function(EventResponse)>> get subscriptions =>
-      _subscriptions;
+  Map<String, List<Function(EventResponse)>> get subscriptions => _subscriptions;
 
   bool _connected = false;
   Timer? _tryConnectInterval;
@@ -152,6 +168,32 @@ class LCUSocket {
       service: 'LCUSocket',
       storage: _storage,
     );
+
+    _debouncer = LCUSocketDebouncer(
+      debounceDuration: _config.debounceDuration,
+    );
+
+    _debouncer.onDebounce.listen((debounceResponse) {
+      for (String key in _subscriptions.keys) {
+        if (key == '*') {
+          // KEY IS ALL -> PIPE ALL EVENTS
+
+          for (Function callback in _subscriptions[key]!) {
+            callback(debounceResponse.event);
+          }
+        } else if (_wildcard.match(debounceResponse.event.uri, key)) {
+          // PATTERN MATCHED
+
+          for (Function callback in _subscriptions[key]!) {
+            callback(debounceResponse.event);
+          }
+        }
+      }
+
+      if (!_config.disableLogging && !_config.disableLoggingDebouncer && _config.debounceDuration != null) {
+        _logger.log('${debounceResponse.event.uri} DEBOUNCED - EMITTED NEWEST EVENT FROM ${debounceResponse.eventsAccumulated} EVENT(S)');
+      }
+    });
   }
 
   /// Tries to connect to the LCUSocket. On success triggers the [onConnect] event.
@@ -160,8 +202,7 @@ class LCUSocket {
   ///
   /// That means you need to call this function in the onClientStarted event from the LCUWatcher.
   Future<void> connect() async {
-    assert(_storage.credentials != null,
-        'LCU-CREDENTIALS NOT FOUND IN STORAGE. YOU MUST WAIT FOR THE LCU-WATCHER TO CONNECT BEFORE YOU TRY TO CONNECT TO THE LCUSocket.');
+    assert(_storage.credentials != null, 'LCU-CREDENTIALS NOT FOUND IN STORAGE. YOU MUST WAIT FOR THE LCU-WATCHER TO CONNECT BEFORE YOU TRY TO CONNECT TO THE LCUSocket.');
 
     // WAIT ONE SECOND TO WAIT FOR THE CLIENT WHEN IT JUST STARTED
 
@@ -182,8 +223,7 @@ class LCUSocket {
     await _connect();
 
     if (!isConnected) {
-      _tryConnectInterval =
-          Timer.periodic(_config.tryConnectInterval, (_) async {
+      _tryConnectInterval = Timer.periodic(_config.tryConnectInterval, (_) async {
         await _connect();
 
         if (isConnected) _tryConnectInterval!.cancel();
@@ -196,16 +236,13 @@ class LCUSocket {
       LCUCredentials? credentials = _storage.credentials;
 
       if (credentials == null) {
-        throw Exception(
-            'LCU-CREDENTIALS NOT PROVIDED. YOU MUST WAIT FOR THE LCU-WATCHER TO CONNECT BEFORE YOU TRY TO CONNECT TO THE LCUSocket.');
+        throw Exception('LCU-CREDENTIALS NOT PROVIDED. YOU MUST WAIT FOR THE LCU-WATCHER TO CONNECT BEFORE YOU TRY TO CONNECT TO THE LCUSocket.');
       }
 
       if (!_config.disableLogging) _logger.log('TRYING TO CONNECT');
 
-      String url =
-          'wss://${credentials.username}:${credentials.password}@${credentials.host}:${credentials.port}/';
-      var bytes =
-          utf8.encode('${credentials.username}:${credentials.password}');
+      String url = 'wss://${credentials.username}:${credentials.password}@${credentials.host}:${credentials.port}/';
+      var bytes = utf8.encode('${credentials.username}:${credentials.password}');
       var base64Str = base64.encode(bytes);
 
       Map<String, dynamic> headers = {'Authorization': 'Basic $base64Str'};
@@ -237,27 +274,19 @@ class LCUSocket {
         }
 
         Map parsedPayload = parsedContent[2];
-
-        EventResponse? response = EventResponse(
-          uri: parsedPayload['uri'],
-          eventType:
-              parsedPayload['eventType'].toString().toEventResponseType(),
-          data: parsedPayload['data'],
-        );
+        String uri = parsedPayload['uri'];
 
         for (String key in _subscriptions.keys) {
-          if (key == '*') {
+          if (key == '*' || _wildcard.match(uri, key)) {
             // KEY IS ALL -> PIPE ALL EVENTS
 
-            for (Function callback in _subscriptions[key]!) {
-              callback(response);
-            }
-          } else if (_wildcard.match(response.uri, key)) {
-            // PATTERN MATCHED
+            EventResponse response = EventResponse(
+              uri: uri,
+              eventType: parsedPayload['eventType'].toString().toEventResponseType(),
+              data: parsedPayload['data'],
+            );
 
-            for (Function callback in _subscriptions[key]!) {
-              callback(response);
-            }
+            _debouncer.add(response);
           }
         }
       }, onDone: () async {
@@ -361,8 +390,7 @@ class LCUSocket {
   /// If you subscribed to `/test` e.g. and you call [fireEvent] with the path `/test` it will raise an event in your subscription handler.
   void fireEvent(String path, ManualEventResponse manualEventResponse) {
     if (_subscriptions.containsKey(path)) {
-      _subscriptions[path]!
-          .forEach((callback) => callback(manualEventResponse));
+      _subscriptions[path]!.forEach((callback) => callback(manualEventResponse));
     }
   }
 
@@ -372,5 +400,6 @@ class LCUSocket {
     _onConnectStreamController.close();
     _onDisconnectStreamController.close();
     _socket?.close();
+    _debouncer.dispose();
   }
 }
